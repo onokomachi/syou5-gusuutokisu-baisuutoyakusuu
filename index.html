@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
-    <title>わり算ランド｜わり算の筆算ラボEX</title>
+    <title>かずのせいしつラボ｜偶数・奇数と倍数・約数</title>
     <!-- テーマの FOUC（白フラッシュ）防止 その1:
          <head> の時点では document.body は未生成（null）なので、ここでは必ず存在する
          documentElement（<html>）に背景色を即時セットする。これで最初のペイントから
@@ -12,7 +12,7 @@
     <script>
       (function () {
         try {
-          var raw = localStorage.getItem('hissan_settings_v1');
+          var raw = localStorage.getItem('suusei_settings_v1');
           var theme = (raw && JSON.parse(raw).state && JSON.parse(raw).state.theme) || 'light';
           var BG = { light: '#eef2f7', dark: '#000000', aurora: '#020309', sakura: '#0d0416', inferno: '#0a0100', tenkuu: '#041022' };
           var bg = BG[theme] || '#eef2f7';

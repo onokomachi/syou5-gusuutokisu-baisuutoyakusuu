@@ -37,7 +37,7 @@ export const useSettingsStore = create<SettingsState>()(
       toggleSound: () => set((s) => ({ soundEnabled: !s.soundEnabled })),
     }),
     {
-      name: 'hissan_settings_v1',
+      name: 'suusei_settings_v1',
       version: 2,
       // v1→v2: 廃止テーマ（和 cream / 深海 deep / 宇宙神 cosmos）は light に戻す
       migrate: (persisted) => {

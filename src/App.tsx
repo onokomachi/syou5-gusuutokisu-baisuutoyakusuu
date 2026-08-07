@@ -6,12 +6,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Hub } from './components/Hub';
-import { HissanModule } from './components/modules/HissanModule';
-import { MentalModule } from './components/modules/MentalModule';
-import { RulesModule } from './components/modules/RulesModule';
-import { EstimateModule } from './components/modules/EstimateModule';
-import { CheckModule } from './components/modules/CheckModule';
-import { WordProblemModule } from './components/modules/WordProblemModule';
+import { EvenOddModule } from './components/modules/EvenOddModule';
+import { EvenOddRuleModule } from './components/modules/EvenOddRuleModule';
+import { MultiplesModule } from './components/modules/MultiplesModule';
+import { LcmModule } from './components/modules/LcmModule';
+import { DivisorsModule } from './components/modules/DivisorsModule';
+import { GcdModule } from './components/modules/GcdModule';
 import { ErrorHunterModule } from './components/modules/ErrorHunterModule';
 import { MockTestModule } from './components/modules/MockTestModule';
 import { LogView } from './components/LogView';
@@ -35,22 +35,22 @@ export default function App() {
 
   const renderModule = (id: ModuleId) => {
     switch (id) {
-      case 'hissan':
-        return <HissanModule onExit={goHub} />;
-      case 'mental':
-        return <MentalModule onExit={goHub} />;
-      case 'rules':
-        return <RulesModule onExit={goHub} />;
-      case 'estimate':
-        return <EstimateModule onExit={goHub} />;
-      case 'check':
-        return <CheckModule onExit={goHub} />;
-      case 'word-problem':
-        return <WordProblemModule onExit={goHub} />;
+      case 'even-odd':
+        return <EvenOddModule onExit={goHub} />;
+      case 'even-odd-rule':
+        return <EvenOddRuleModule onExit={goHub} />;
+      case 'multiples':
+        return <MultiplesModule onExit={goHub} />;
+      case 'lcm':
+        return <LcmModule onExit={goHub} />;
+      case 'divisors':
+        return <DivisorsModule onExit={goHub} />;
+      case 'gcd':
+        return <GcdModule onExit={goHub} />;
       case 'error-hunter':
         return <ErrorHunterModule onExit={goHub} />;
       default:
-        return <HissanModule onExit={goHub} />;
+        return <EvenOddModule onExit={goHub} />;
     }
   };
 

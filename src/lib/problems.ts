@@ -1,664 +1,609 @@
 /**
- * わり算単元（4年）の問題ジェネレーター集。
- * 教科書・問題集・単元テストで頻出の問題タイプを、スキル別・段階別に網羅する。
+ * 単元「偶数と奇数」「倍数と約数」（小学5年）の問題ジェネレーター集。
+ * 全レベルが同じ Problem 型（judge / choice / multi / numeric）を返すため、
+ * 1つの GenericRound コンポーネントで全モジュールの出題・採点・フィードバックを扱える。
  *
- * - mental   : あんざいわり算（九九の範囲 → あまり → 何十・何百）
- * - rules    : わり算のきまり（同じ数でわる・□うめ・あまりの10倍に注意）
- * - estimate : 商の見当づけ（商がたつ位・商のけた数・四捨五入による仮商）
- * - check    : たしかめ算（わる数×商＋あまり＝わられる数）
- * - word     : 文章題（等分除・包含除・あまりの切り上げ/切り捨て）
- * - error    : エラーハンター（0とばし・あまり過大・ひき算ミス・きまりのあまり）
+ * - even-odd      : 偶数・奇数チェック（一の位判定・大きい数・0の性質・数列の穴うめ）
+ * - even-odd-rule : 偶数・奇数の性質（たし算・かけ算の結果予想・逆算・つまずき）
+ * - multiples     : 倍数みつけ（□番目の倍数・倍数判定・選択・範囲内の個数）
+ * - lcm           : 公倍数・最小公倍数（求める・選ぶ・文章題・3数の発展）
+ * - divisors      : 約数みつけ（判定・選択・個数・全部さがす）
+ * - gcd           : 公約数・最大公約数（求める・選ぶ・文章題・素数判定の発展）
+ * - error-hunter  : 頻出の誤解（0は奇数/1は素数/約数の1と自分自身の抜け/最大公約数と最小公倍数の混同/倍数の飛ばし/奇数+奇数）
  */
 
-function rnd(min: number, max: number) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-function pick<T>(a: T[]): T { return a[Math.floor(Math.random() * a.length)]; }
+export function rnd(min: number, max: number) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+export function pick<T>(a: T[]): T { return a[Math.floor(Math.random() * a.length)]; }
+export function shuffle<T>(a: T[]): T[] { return [...a].sort(() => Math.random() - 0.5); }
 
-/* =====================================================================
- * あんざん わり算
- * =================================================================== */
-
-export type MentalLevel = 'mental-basic' | 'mental-rem' | 'mental-tens' | 'mental-hundreds';
-
-export const MENTAL_LEVELS: { id: MentalLevel; label: string; desc: string }[] = [
-  { id: 'mental-basic', label: '九九の はんい', desc: '48÷6 のような わりきれる わり算' },
-  { id: 'mental-rem', label: 'あまりの ある わり算', desc: '50÷7 は 7あまり1' },
-  { id: 'mental-tens', label: '何十の わり算', desc: '60÷3 や 240÷3 を 10のまとまりで' },
-  { id: 'mental-hundreds', label: '何百の わり算', desc: '600÷3 を 100のまとまりで' },
-];
-
-export interface SimpleDivProblem {
-  dividend: number;
-  divisor: number;
-  quotient: number;
-  remainder: number;
-  hint: string;
+export function gcdOf(a: number, b: number): number {
+  a = Math.abs(a); b = Math.abs(b);
+  while (b) { [a, b] = [b, a % b]; }
+  return a;
 }
-
-export function generateMental(level: MentalLevel): SimpleDivProblem {
-  switch (level) {
-    case 'mental-basic': {
-      const divisor = rnd(2, 9);
-      const quotient = rnd(2, 9);
-      const dividend = divisor * quotient;
-      return { dividend, divisor, quotient, remainder: 0, hint: `${divisor}のだんの 九九で 考えよう。${divisor} × いくつ で ${dividend} かな？` };
-    }
-    case 'mental-rem': {
-      const divisor = rnd(3, 9);
-      const quotient = rnd(2, 9);
-      const remainder = rnd(1, divisor - 1);
-      const dividend = divisor * quotient + remainder;
-      return { dividend, divisor, quotient, remainder, hint: `${divisor}のだんで ${dividend} を こえない いちばん大きい 九九を さがそう。あまりは わる数より 小さくなるよ。` };
-    }
-    case 'mental-tens': {
-      // 60÷3（6÷3 の10倍）も 240÷3（24÷3 の10倍）も「10のまとまり」で同じ考え方
-      const divisor = rnd(2, 9);
-      const q1 = rnd(2, 9);
-      const base = divisor * q1;
-      const dividend = base * 10;
-      return { dividend, divisor, quotient: q1 * 10, remainder: 0, hint: `10のまとまりで 考えよう。${base} ÷ ${divisor} = ${q1} だから、10が ${q1}こ分 → ${q1 * 10} だね。` };
-    }
-    case 'mental-hundreds': {
-      const divisor = rnd(2, 9);
-      const q1 = rnd(2, 9);
-      const dividend = divisor * q1 * 100;
-      return { dividend, divisor, quotient: q1 * 100, remainder: 0, hint: `100のまとまりで 考えよう。${dividend / 100} ÷ ${divisor} = ${q1} だから、100が ${q1}こ分だね。` };
-    }
-  }
+export function lcmOf(a: number, b: number): number { return (a * b) / gcdOf(a, b); }
+export function divisorsOf(n: number): number[] {
+  const out: number[] = [];
+  for (let i = 1; i <= n; i++) if (n % i === 0) out.push(i);
+  return out;
+}
+export function isPrime(n: number): boolean {
+  if (n < 2) return false;
+  for (let i = 2; i * i <= n; i++) if (n % i === 0) return false;
+  return true;
 }
 
 /* =====================================================================
- * わり算のきまり
+ * 共通の Problem 型
  * =================================================================== */
 
-export type RulesLevel =
-  | 'rules-tens' | 'rules-hundreds' | 'rules-rem' | 'rules-blank'
-  | 'rules-kufu' | 'rules-trap' | 'rules-equal';
+export type ProblemKind = 'judge' | 'choice' | 'multi' | 'numeric';
 
-export const RULES_LEVELS: { id: RulesLevel; label: string; desc: string }[] = [
-  { id: 'rules-tens', label: '何十 ÷ 何十', desc: '90÷30 は 9÷3 と 同じ商' },
-  { id: 'rules-hundreds', label: '何百 ÷ 何百', desc: '2400÷600 は 24÷6 と 同じ商' },
-  { id: 'rules-rem', label: 'あまりに ちゅうい！', desc: '740÷90 の あまりは 2 じゃなくて 20' },
-  { id: 'rules-kufu', label: 'くふうして 筆算', desc: '6400÷800 は 0を消して 64÷8' },
-  { id: 'rules-trap', label: 'あまりの わなを 見ぬけ', desc: '6500÷700 の あまりは どれ？' },
-  { id: 'rules-equal', label: '商が 等しい式を さがせ', desc: '120÷60 と 同じ商の式を 2つ えらぶ' },
-  { id: 'rules-blank', label: '□に あてはまる数', desc: '72÷9 ＝ 720÷□' },
-];
-
-export interface RulesProblem {
-  kind: 'calc' | 'blank' | 'choice' | 'multi';
-  /** calc: わり算そのもの */
-  dividend: number;
-  divisor: number;
-  quotient: number;
-  remainder: number;
-  /** blank: 「a ÷ b = c ÷ □」のような式（□は1か所） */
-  exprLeft?: string;
-  exprRight?: string;
-  blankAnswer?: number;
-  /** choice: 選択肢から1つ選ぶ / multi: 2つ選ぶ */
+export interface Problem {
+  kind: ProblemKind;
+  /** 出題文 */
+  prompt: string;
+  /** 大きく表示する数・式（任意） */
+  display?: string;
+  /** judge: 2つのラベル。judgeAnswer が true なら1つ目が正解 */
+  judgeLabels?: [string, string];
+  judgeAnswer?: boolean;
+  /** choice: 選択肢から1つ選ぶ */
   choices?: string[];
   answerIndex?: number;
+  /** multi: 選択肢から複数選ぶ（個数は問題ごとに異なる） */
   answerIndices?: number[];
-  /** 問題文（choice / multi 用） */
-  text?: string;
-  hint: string;
-  explain?: string;
-}
-
-export function generateRules(level: RulesLevel): RulesProblem {
-  switch (level) {
-    case 'rules-tens': {
-      const d0 = rnd(2, 9);
-      const q = rnd(2, 9);
-      const divisor = d0 * 10;
-      const dividend = divisor * q;
-      return { kind: 'calc', dividend, divisor, quotient: q, remainder: 0, hint: `わられる数と わる数を 両方 10でわっても 商は 同じ。${dividend / 10} ÷ ${d0} で 考えよう。` };
-    }
-    case 'rules-hundreds': {
-      const d0 = rnd(2, 9);
-      const q = rnd(2, 9);
-      const divisor = d0 * 100;
-      const dividend = divisor * q;
-      return { kind: 'calc', dividend, divisor, quotient: q, remainder: 0, hint: `両方を 100でわっても 商は 同じ。${dividend / 100} ÷ ${d0} で 考えよう。` };
-    }
-    case 'rules-rem': {
-      const d0 = rnd(3, 9);
-      const q = rnd(2, 9);
-      const r0 = rnd(1, d0 - 1);
-      const divisor = d0 * 10;
-      const dividend = divisor * q + r0 * 10;
-      return {
-        kind: 'calc', dividend, divisor, quotient: q, remainder: r0 * 10,
-        hint: `${dividend / 10} ÷ ${d0} = ${q} あまり ${r0}。でも この「${r0}」は 10のまとまりが ${r0}こ という意味だから、本当の あまりは ${r0 * 10} だよ。`,
-      };
-    }
-    case 'rules-kufu': {
-      // 末尾に0のある数のわり算（0を消して筆算するくふう）。
-      // 半々で「わりきれる（6400÷800）」「あまりが出る（8200÷300=27あまり100）」を出す
-      const d0 = rnd(2, 9);
-      const divisor = d0 * 100;
-      if (Math.random() < 0.5) {
-        const q = rnd(2, 9);
-        const dividend = divisor * q;
-        return {
-          kind: 'calc', dividend, divisor, quotient: q, remainder: 0,
-          hint: `0を 2つずつ 消して ${dividend / 100} ÷ ${d0} で 計算しよう。商は 変わらないよ。`,
-          explain: `${dividend} ÷ ${divisor} は 0を消して ${dividend / 100} ÷ ${d0} ＝ ${q}。`,
-        };
-      }
-      const q = rnd(12, 32);
-      const r0 = rnd(1, d0 - 1);
-      const dividend = divisor * q + r0 * 100;
-      return {
-        kind: 'calc', dividend, divisor, quotient: q, remainder: r0 * 100,
-        hint: `0を消して ${dividend / 100} ÷ ${d0} を 筆算しよう。ただし あまりには 消した0を つけるよ（あまり ${r0} → ${r0 * 100}）。`,
-        explain: `${dividend / 100} ÷ ${d0} ＝ ${q} あまり ${r0}。あまりの ${r0} は 100が ${r0}こ分だから、答えは ${q} あまり ${r0 * 100}。`,
-      };
-    }
-    case 'rules-trap': {
-      // 6500÷700 のあまりを 3択から選ぶ（9あまり2 / 900あまり200 / 9あまり200）
-      const d0 = rnd(3, 9);
-      const q = rnd(2, 9);
-      const r0 = rnd(1, d0 - 1);
-      const divisor = d0 * 100;
-      const dividend = divisor * q + r0 * 100;
-      const correct = `${q} あまり ${r0 * 100}`;
-      const options = [
-        `${q} あまり ${r0}`,
-        `${q * 100} あまり ${r0 * 100}`,
-        correct,
-      ].sort(() => Math.random() - 0.5);
-      return {
-        kind: 'choice', dividend, divisor, quotient: q, remainder: r0 * 100,
-        text: `${dividend} ÷ ${divisor} の筆算を 0を消して しました。正しい答えは どれですか？`,
-        choices: options, answerIndex: options.indexOf(correct),
-        hint: `商は 0を消した ${dividend / 100} ÷ ${d0} と 同じ。でも あまりには 消した0を つけるよ。たしかめ算 ${divisor} × ${q} ＋ あまり ＝ ${dividend} で かくにんしよう。`,
-        explain: `${dividend / 100} ÷ ${d0} ＝ ${q} あまり ${r0}。あまりに 消した0を つけて、正しくは ${correct}。`,
-      };
-    }
-    case 'rules-equal': {
-      // 商が等しい式を2つ選ぶ（大問7型）
-      const d0 = rnd(2, 6);
-      const q = rnd(2, 9);
-      const divisor = d0 * 10;
-      const dividend = divisor * q;
-      const correct1 = `${dividend / 10} ÷ ${d0}`; // 両方を10でわった式
-      let m = rnd(1, 9) * 10;
-      if (m === divisor) m = m === 90 ? 80 : m + 10; // 問題と同じ式になるのを避ける
-      const correct2 = `${q * m} ÷ ${m}`; // 商が同じになる別の式
-      const wrong1 = `${dividend} ÷ ${d0}`; // わられる数だけ そのまま
-      const w = rnd(2, 9);
-      const wrongQ = w === q ? w + 1 : w;
-      const wrong2 = `${wrongQ * d0 * 10} ÷ ${d0 * 10}`; // 商がちがう式
-      const options = [correct1, correct2, wrong1, wrong2].sort(() => Math.random() - 0.5);
-      return {
-        kind: 'multi', dividend, divisor, quotient: q, remainder: 0,
-        text: `${dividend} ÷ ${divisor} と 商が等しい式を 2つ えらびましょう。`,
-        choices: options,
-        answerIndices: [options.indexOf(correct1), options.indexOf(correct2)].sort((a, b) => a - b),
-        hint: `${dividend} ÷ ${divisor} の商は ${q}。それぞれの式の商を たしかめて、${q} になる式を さがそう。わられる数と わる数の 両方に 同じ数を かけたり わったり しても 商は 同じだよ。`,
-        explain: `${dividend} ÷ ${divisor} ＝ ${q}。「${correct1}」と「${correct2}」も 商が ${q} で 等しいね。`,
-      };
-    }
-    case 'rules-blank': {
-      const b = rnd(2, 9);
-      const q = rnd(2, 9);
-      const a = b * q;
-      const scale = pick([10, 100]);
-      // どちらの数を□にするか
-      if (Math.random() < 0.5) {
-        // a ÷ b ＝ (a×scale) ÷ □   → □ = b×scale
-        return {
-          kind: 'blank', dividend: a, divisor: b, quotient: q, remainder: 0,
-          exprLeft: `${a} ÷ ${b}`, exprRight: `${a * scale} ÷ □`, blankAnswer: b * scale,
-          hint: `わられる数が ${scale}倍に なっているね。商を 同じにするには、わる数も ${scale}倍に しよう。`,
-        };
-      }
-      // (a×scale) ÷ (b×scale) ＝ a ÷ □ → □ = b
-      return {
-        kind: 'blank', dividend: a * scale, divisor: b * scale, quotient: q, remainder: 0,
-        exprLeft: `${a * scale} ÷ ${b * scale}`, exprRight: `${a} ÷ □`, blankAnswer: b,
-        hint: `わられる数が ${scale}分の1 に なっているね。わる数も ${scale}でわると 商は 同じだよ。`,
-      };
-    }
-  }
-}
-
-/* =====================================================================
- * 商の見当づけ
- * =================================================================== */
-
-export type EstimateLevel = 'est-place' | 'est-digits' | 'est-round' | 'est-cond';
-
-export const ESTIMATE_LEVELS: { id: EstimateLevel; label: string; desc: string }[] = [
-  { id: 'est-place', label: 'どの位に たつ？', desc: '商を 立てはじめる 位を あてよう' },
-  { id: 'est-digits', label: '商は 何けた？', desc: '計算する前に けた数を 見ぬこう' },
-  { id: 'est-round', label: '仮の商の 見当', desc: '171÷21 → 21を20とみて 見当8' },
-  { id: 'est-cond', label: '□に入る数字は？', desc: '62)6□9 の商が 10より小さくなる □は？' },
-];
-
-export interface EstimateProblem {
-  kind: 'choice' | 'value' | 'multi-digit';
-  dividend: number;
-  divisor: number;
-  text: string;
-  choices?: string[];
-  answerIndex?: number;
+  /** numeric: 数値を入力する */
   answerValue?: number;
-  /** multi-digit: □入り被除数（例 '6□9'）と、条件を満たす数字ぜんぶ */
-  dividendTemplate?: string;
-  answerDigits?: number[];
-  /** 筆算の形（わく）で表示するか */
-  bracket?: boolean;
   hint: string;
-  explain: string; // 正解後に示す理由
+  explain: string;
+  /** 学習のきろく表示用ラベル */
+  label: string;
 }
 
-const PLACE_NAMES = ['百の位', '十の位', '一の位'];
-
-/** 商が立ちはじめる位（3桁筆算基準: 0=百,1=十,2=一） */
-function firstQuotientPlace(dividend: number, divisor: number): number {
-  const s = dividend.toString();
-  let cur = 0;
-  for (let i = 0; i < s.length; i++) {
-    cur = cur * 10 + Number(s[i]);
-    if (cur >= divisor) return 3 - s.length + i;
+/** 本番テストの答案きろく用に、問題と正しい答えを文字列にする。 */
+export function describeProblem(p: Problem): { q: string; a: string } {
+  const q = p.display ? `${p.display}　${p.prompt}` : p.prompt;
+  let a = '';
+  switch (p.kind) {
+    case 'judge': a = p.judgeAnswer ? p.judgeLabels![0] : p.judgeLabels![1]; break;
+    case 'choice': a = p.choices![p.answerIndex!]; break;
+    case 'multi': a = (p.answerIndices ?? []).map((i) => p.choices![i]).join('、 '); break;
+    case 'numeric': a = String(p.answerValue); break;
   }
-  return 2;
+  return { q, a };
 }
 
-export function generateEstimate(level: EstimateLevel): EstimateProblem {
-  switch (level) {
-    case 'est-place': {
-      const variant = pick(['2-2', '3-2', '3-2', '3-1', '3-3'] as const);
-      let dividend = 0, divisor = 0;
-      if (variant === '2-2') { divisor = rnd(12, 89); dividend = rnd(divisor + 1, 99); }
-      else if (variant === '3-1') { divisor = rnd(2, 9); dividend = rnd(102, 999); }
-      else if (variant === '3-3') { divisor = rnd(110, 320); dividend = rnd(divisor + 1, 999); }
-      else { divisor = rnd(12, 89); dividend = rnd(120, 999); }
-      const place = firstQuotientPlace(dividend, divisor);
-      const choices = dividend >= 100 && divisor < 10 ? PLACE_NAMES : PLACE_NAMES.slice(1);
-      const answerIndex = dividend >= 100 && divisor < 10 ? place : place - 1;
-      const head = dividend.toString().slice(0, place - (3 - dividend.toString().length) + 1);
-      return {
-        kind: 'choice', dividend, divisor, bracket: true,
-        text: `このわり算の商は、何の位から たちますか？`,
-        choices, answerIndex,
-        hint: `いちばん大きい位から じゅんに「${divisor} が入るかな？」と くらべてみよう。`,
-        explain: `${head} の中に ${divisor} が入るから、${choices[answerIndex]}から 商が たつよ。`,
-      };
-    }
-    case 'est-digits': {
-      const variant = pick(['3-1', '3-1', '2-1', '3-2'] as const);
-      let dividend = 0, divisor = 0;
-      if (variant === '2-1') { divisor = rnd(2, 9); dividend = rnd(12, 99); }
-      else if (variant === '3-1') { divisor = rnd(2, 9); dividend = rnd(102, 999); }
-      else { divisor = rnd(12, 89); dividend = rnd(120, 999); }
-      const q = Math.floor(dividend / divisor);
-      const digits = q.toString().length;
-      const choices = ['1けた', '2けた', '3けた'];
-      return {
-        kind: 'choice', dividend, divisor,
-        text: `${dividend} ÷ ${divisor} の商は、何けたに なりますか？`,
-        choices, answerIndex: digits - 1,
-        hint: `商が たちはじめる 位が わかれば、けた数も わかるよ。`,
-        explain: `商は ${q}（${digits}けた）。たちはじめる位から 一の位まで 商が ならぶよ。`,
-      };
-    }
-    case 'est-round': {
-      // 商が1けたになる ÷2けた。四捨五入して「何十」とみて見当をつける
-      const divisor = rnd(12, 89);
-      const rounded = Math.max(10, Math.round(divisor / 10) * 10);
-      const q = rnd(2, 9);
-      const r = rnd(0, divisor - 1);
-      const dividend = divisor * q + r;
-      if (dividend > 999) return generateEstimate(level);
-      const est = Math.floor(Math.floor(dividend / 10) / (rounded / 10));
-      if (est < 1 || est > 9) return generateEstimate(level);
-      return {
-        kind: 'value', dividend, divisor,
-        text: `「${dividend} ÷ ${divisor}」${divisor} を ${rounded} とみると、商の見当は いくつですか？`,
-        answerValue: est,
-        hint: `${rounded} は 10が ${rounded / 10}こ。${dividend} は 10が だいたい ${Math.floor(dividend / 10)}こ。${Math.floor(dividend / 10)} ÷ ${rounded / 10} で 考えよう。`,
-        explain: `${Math.floor(dividend / 10)} ÷ ${rounded / 10} で 見当は ${est}。見当が ずれていたら「大きすぎ→1へらす」「あまりが大きい→1ふやす」で直せば OK！`,
-      };
-    }
-    case 'est-cond': {
-      // 62)6□9 で「商が10より小さくなる □ ぜんぶ」（大問9型）
-      const t = rnd(1, 9);       // わる数の十の位 ＝ わられる数の百の位
-      const o = rnd(1, 4);       // わる数の一の位（答えの個数 = o 個になる）
-      const u = rnd(0, 9);       // わられる数の一の位
-      const divisor = t * 10 + o;
-      const template = `${t}□${u}`;
-      // 商が10より小さい ⇔ わられる数 < わる数×10 ⇔ t□u < t{o}0 ⇔ □ ≦ o-1
-      const answerDigits = Array.from({ length: o }, (_, i) => i);
-      return {
-        kind: 'multi-digit', dividend: t * 100 + u, divisor, bracket: true,
-        dividendTemplate: template,
-        text: `このわり算で、商が 10より小さくなるのは、□が どんな数字の ときですか？あてはまる数字を ぜんぶ えらびましょう。`,
-        answerDigits,
-        hint: `商が 10より小さい ⇔ わられる数が「わる数 × 10 ＝ ${divisor * 10}」より 小さい ということ。${template} が ${divisor * 10} より小さくなる □ を さがそう。`,
-        explain: `${divisor} × 10 ＝ ${divisor * 10}。${template} ＜ ${divisor * 10} になるのは □ が ${answerDigits.join('・')} のとき。このとき 商は 十の位に たたないよ。`,
-      };
-    }
+/** base の倍数のうち、excludeBase の倍数ではないものを max まで すべて列挙する。 */
+function multiplesNotOf(base: number, excludeBase: number, max: number): number[] {
+  const out: number[] = [];
+  for (let v = base; v <= max; v += base) if (v % excludeBase !== 0) out.push(v);
+  return out;
+}
+
+function nonMultipleOf(base: number, min: number, max: number): number {
+  for (let i = 0; i < 60; i++) {
+    const v = rnd(min, max);
+    if (v % base !== 0) return v;
   }
+  return min;
+}
+
+/**
+ * gen() を最大 maxAttempts 回呼び出し、重複を除いて最大 count 個の値を集める。
+ * 候補が少ない組み合わせ（例: 小さい数どうしの倍数）では count に満たないこともあるが、
+ * 無限ループにはならない（gen() が同じ値を返し続けても必ず終了する）。
+ */
+function collectUpTo(count: number, gen: () => number, maxAttempts = 200, pred?: (v: number) => boolean): number[] {
+  const set = new Set<number>();
+  let guard = 0;
+  while (set.size < count && guard < maxAttempts) {
+    guard++;
+    const v = gen();
+    if (!pred || pred(v)) set.add(v);
+  }
+  return [...set];
 }
 
 /* =====================================================================
- * たしかめ算（検算）
+ * ①偶数・奇数チェック
  * =================================================================== */
 
-export type CheckLevel = 'check-nodiv' | 'check-rem' | 'check-big' | 'check-shiki' | 'check-findnum';
+export type EvenOddLevel = 'eo-basic' | 'eo-big' | 'eo-zero' | 'eo-seq';
 
-export const CHECK_LEVELS: { id: CheckLevel; label: string; desc: string }[] = [
-  { id: 'check-nodiv', label: 'わりきれる とき', desc: 'わる数 × 商 ＝ わられる数' },
-  { id: 'check-rem', label: 'あまりの ある とき', desc: 'わる数 × 商 ＋ あまり ＝ わられる数' },
-  { id: 'check-big', label: '大きな数で ちょうせん', desc: '3けたの わり算を たしかめよう' },
-  { id: 'check-shiki', label: 'けん算の式を 書く', desc: '997÷49＝20あまり17 → □×20＋□＝□' },
-  { id: 'check-findnum', label: 'ある数を もとめる', desc: 'けん算の式で「ある数」を さがせ！' },
+export const EVEN_ODD_LEVELS: { id: EvenOddLevel; label: string; desc: string }[] = [
+  { id: 'eo-basic', label: 'きほんの はんてい', desc: '1〜99の数で ぐうすう・きすうを 見分けよう' },
+  { id: 'eo-big', label: '大きい数の はんてい', desc: '100〜9999の数も 一の位を見れば わかる！' },
+  { id: 'eo-zero', label: '正しい？まちがい？クイズ', desc: '0の せいしつなど、正しいか考えよう' },
+  { id: 'eo-seq', label: 'すうれつの あなうめ', desc: 'ぐうすう・きすうだけの数列の □は？' },
 ];
 
-export interface CheckProblem {
-  kind: 'fill' | 'findnum';
-  dividend: number;
-  divisor: number;
-  quotient: number;
-  remainder: number;
-  /** fill: 空らんにする場所。'qr'=商とあまり / 'shiki'=わる数・あまり・わられる数（商は見えている） */
-  variant?: 'qr' | 'shiki';
-  /** 順番にうめる空らんの正解 */
-  blanks: number[];
-  blankLabels: string[];
-  /** findnum: ある数（dividend）を べつの数でわる 2段階問題 */
-  secondDivisor?: number;
-  secondQuotient?: number;
-  secondRemainder?: number;
-  hint: string;
-}
-
-export function generateCheck(level: CheckLevel): CheckProblem {
-  if (level === 'check-findnum') {
-    // ある数を a でわったら 商 q あまり r。この数を b でわった答えは？（大問13型）
-    for (let i = 0; i < 500; i++) {
-      const a = rnd(21, 45);
-      const q = rnd(12, 29);
-      const r = rnd(1, a - 1);
-      const n = a * q + r;
-      if (n > 999) continue;
-      let b = rnd(21, 45);
-      if (b === a) b = b === 45 ? 44 : b + 1;
-      return {
-        kind: 'findnum',
-        dividend: n, divisor: a, quotient: q, remainder: r,
-        variant: 'qr',
-        blanks: [n],
-        blankLabels: ['ある数'],
-        secondDivisor: b,
-        secondQuotient: Math.floor(n / b),
-        secondRemainder: n % b,
-        hint: `けん算の式「わる数 × 商 ＋ あまり ＝ わられる数」を使うと、ある数 ＝ ${a} × ${q} ＋ ${r} で もとめられるよ。`,
-      };
-    }
-  }
-  if (level === 'check-shiki') {
-    // けん算の式を書く: わる数・あまり・わられる数をうめる（商は見えている。大問5型）
-    const divisor = rnd(21, 49);
-    const quotient = rnd(12, 29);
-    const remainder = rnd(1, divisor - 1);
-    const dividend = divisor * quotient + remainder;
-    if (dividend > 999) return generateCheck(level);
-    return {
-      kind: 'fill', variant: 'shiki',
-      dividend, divisor, quotient, remainder,
-      blanks: [divisor, remainder, dividend],
-      blankLabels: ['わる数', 'あまり', 'わられる数'],
-      hint: `けん算の式は「わる数 × 商 ＋ あまり ＝ わられる数」。もとの式 ${dividend} ÷ ${divisor} ＝ ${quotient} あまり ${remainder} から、どの数が どこに入るか 考えよう。`,
-    };
-  }
-  let divisor = 0, quotient = 0, remainder = 0;
-  if (level === 'check-nodiv') {
-    divisor = rnd(2, 9);
-    quotient = rnd(12, 24);
-    remainder = 0;
-  } else if (level === 'check-rem') {
-    divisor = rnd(3, 9);
-    quotient = rnd(12, 24);
-    remainder = rnd(1, divisor - 1);
-  } else {
-    if (Math.random() < 0.5) {
-      divisor = rnd(3, 9);
-      quotient = rnd(102, 320);
-    } else {
-      divisor = rnd(12, 39);
-      quotient = rnd(12, 40);
-    }
-    remainder = rnd(1, divisor - 1);
-  }
-  const dividend = divisor * quotient + remainder;
-  const blanks = remainder > 0 ? [quotient, remainder, dividend] : [quotient, dividend];
-  const blankLabels = remainder > 0 ? ['商', 'あまり', 'わられる数'] : ['商', 'わられる数'];
-  return {
-    kind: 'fill', variant: 'qr',
-    dividend, divisor, quotient, remainder, blanks, blankLabels,
-    hint: remainder > 0
-      ? `たしかめ算は「わる数 × 商 ＋ あまり ＝ わられる数」。${divisor} × ${quotient} を 計算してから ${remainder} を たそう。`
-      : `たしかめ算は「わる数 × 商 ＝ わられる数」。${divisor} × ${quotient} を 計算しよう。`,
-  };
-}
-
-/* =====================================================================
- * 文章題
- * =================================================================== */
-
-export type WordLevel = 'wp-share' | 'wp-group' | 'wp-rem' | 'wp-up' | 'wp-down' | 'wp-times' | 'wp-big';
-
-export const WORD_LEVELS: { id: WordLevel; label: string; desc: string }[] = [
-  { id: 'wp-share', label: '同じ数ずつ 分ける', desc: '1人分は 何こ？（等分除）' },
-  { id: 'wp-group', label: 'いくつ分 とれる？', desc: '何ふくろ できる？（包含除）' },
-  { id: 'wp-rem', label: 'あまりの ある もんだい', desc: '商と あまりを 答えよう' },
-  { id: 'wp-up', label: 'あまりを 切り上げる', desc: 'ぜんいん のれるには あと1つ！' },
-  { id: 'wp-down', label: 'あまりを 切り捨てる', desc: 'あまりでは 1つ 作れない…' },
-  { id: 'wp-times', label: '何倍かを もとめる', desc: '320kgは 64kgの 何倍？' },
-  { id: 'wp-big', label: '大きな数の もんだい', desc: '2けたで わる 文章題' },
+const EO_ZERO_STATEMENTS = [
+  { text: '0は ぐうすうである', isTrue: true, explain: '0は 2で わりきれる（0÷2＝0）ので、ぐうすうだよ。' },
+  { text: '1000は きすうである', isTrue: false, explain: '1000の 一の位は 0だから、ぐうすうだよ。' },
+  { text: '一の位が 5の数は、いつも きすうである', isTrue: true, explain: '一の位が 1,3,5,7,9のときは いつも きすうだよ。' },
+  { text: '一の位が 0の数は、いつも きすうである', isTrue: false, explain: '一の位が 0の数は ぐうすうだよ。' },
+  { text: 'ぐうすうとは、2で わりきれる数のことである', isTrue: true, explain: 'その通り！ぐうすうは 2で ぴったり わりきれる数だよ。' },
+  { text: '0は ぐうすうでも きすうでもない、とくべつな数である', isTrue: false, explain: '0も ぐうすうの なかまだよ（2で わりきれるから）。' },
+  { text: '十の位や 百の位を 見なくても、一の位だけで ぐうすう・きすうが わかる', isTrue: true, explain: 'その通り。一の位だけで 判定できるよ。' },
 ];
 
-export interface DivWordProblem {
-  text: string;
-  emoji: string;
-  dividend: number;
-  divisor: number;
-  choices: string[];
-  correctIndex: number;
-  quotient: number;
-  remainder: number;
-  /** 商・あまりを出したあとの最終回答の種類 */
-  finalKind: 'quotient' | 'quot-rem' | 'up' | 'down';
-  finalAnswer: number;
-  finalUnit: string;
-  finalPrompt: string;
-  why: string;
-  finalWhy: string;
-}
-
-function buildDivChoices(a: number, b: number): { choices: string[]; correctIndex: number } {
-  const options = [`${a} ÷ ${b}`, `${b} ÷ ${a}`, `${a} × ${b}`].sort(() => Math.random() - 0.5);
-  return { choices: options, correctIndex: options.indexOf(`${a} ÷ ${b}`) };
-}
-
-export function generateWord(level: WordLevel): DivWordProblem {
+export function generateEvenOdd(level: EvenOddLevel): Problem {
   switch (level) {
-    case 'wp-share': {
-      const per = rnd(12, 25);
-      const people = rnd(3, 6);
-      const total = per * people;
-      const item = pick([
-        { name: '色紙', unit: 'まい', emoji: '🎨' },
-        { name: 'あめ', unit: 'こ', emoji: '🍬' },
-        { name: 'カード', unit: 'まい', emoji: '🃏' },
-        { name: 'ビー玉', unit: 'こ', emoji: '🔮' },
-      ]);
-      const c = buildDivChoices(total, people);
+    case 'eo-basic': {
+      const n = rnd(1, 99);
+      const isEven = n % 2 === 0;
       return {
-        text: `${item.name}が ${total}${item.unit} あります。${people}人で 同じ数ずつ 分けると、1人分は 何${item.unit}に なりますか？`,
-        emoji: item.emoji, dividend: total, divisor: people, ...c,
-        quotient: per, remainder: 0, finalKind: 'quotient', finalAnswer: per, finalUnit: item.unit,
-        finalPrompt: `1人分は 何${item.unit}？`,
-        why: `「同じ数ずつ 分ける・1人分」は わり算（等分除）だよ。ぜんぶの数 ÷ 人数 だね。`,
-        finalWhy: `${total} ÷ ${people} = ${per}。1人分は ${per}${item.unit} だね。`,
+        kind: 'judge', prompt: `${n} は、ぐうすう？ きすう？`, display: String(n),
+        judgeLabels: ['ぐうすう', 'きすう'], judgeAnswer: isEven,
+        hint: `一の位の数字「${n % 10}」に 注目しよう。0,2,4,6,8で おわる数は ぐうすう、1,3,5,7,9で おわる数は きすうだよ。`,
+        explain: `${n}の 一の位は「${n % 10}」だから ${isEven ? 'ぐうすう' : 'きすう'}。`,
+        label: `${n} は ${isEven ? 'ぐうすう' : 'きすう'}`,
       };
     }
-    case 'wp-group': {
-      const size = rnd(3, 9);
-      const count = rnd(12, 25);
-      const total = size * count;
-      const item = pick([
-        { name: 'クッキー', pack: 'ふくろ', unit: 'こ', emoji: '🍪' },
-        { name: 'たまご', pack: 'パック', unit: 'こ', emoji: '🥚' },
-        { name: '花', pack: 'たば', unit: '本', emoji: '💐' },
-      ]);
-      const c = buildDivChoices(total, size);
+    case 'eo-big': {
+      const n = rnd(100, 9999);
+      const isEven = n % 2 === 0;
       return {
-        text: `${item.name}が ${total}${item.unit} あります。1${item.pack}に ${size}${item.unit}ずつ 入れると、何${item.pack} できますか？`,
-        emoji: item.emoji, dividend: total, divisor: size, ...c,
-        quotient: count, remainder: 0, finalKind: 'quotient', finalAnswer: count, finalUnit: item.pack,
-        finalPrompt: `何${item.pack} できる？`,
-        why: `「${size}${item.unit}ずつ とっていくと いくつ分？」も わり算（包含除）だよ。`,
-        finalWhy: `${total} ÷ ${size} = ${count}。${count}${item.pack} できるね。`,
+        kind: 'judge', prompt: `${n} は、ぐうすう？ きすう？`, display: String(n),
+        judgeLabels: ['ぐうすう', 'きすう'], judgeAnswer: isEven,
+        hint: `大きい数でも、一の位「${n % 10}」だけ見れば わかるよ。`,
+        explain: `一の位が「${n % 10}」だから ${isEven ? 'ぐうすう' : 'きすう'}。`,
+        label: `${n} は ${isEven ? 'ぐうすう' : 'きすう'}`,
       };
     }
-    case 'wp-rem': {
-      const people = rnd(4, 8);
-      const per = rnd(8, 24);
-      const r = rnd(1, people - 1);
-      const total = people * per + r;
-      const item = pick([
-        { name: 'いちご', unit: 'こ', emoji: '🍓' },
-        { name: 'おり紙', unit: 'まい', emoji: '📄' },
-        { name: 'クリップ', unit: 'こ', emoji: '📎' },
-      ]);
-      const c = buildDivChoices(total, people);
+    case 'eo-zero': {
+      const s = pick(EO_ZERO_STATEMENTS);
       return {
-        text: `${item.name}が ${total}${item.unit} あります。${people}人で 同じ数ずつ 分けると、1人分は 何${item.unit}で、何${item.unit} あまりますか？`,
-        emoji: item.emoji, dividend: total, divisor: people, ...c,
-        quotient: per, remainder: r, finalKind: 'quot-rem', finalAnswer: per, finalUnit: item.unit,
-        finalPrompt: `1人分と あまりは？`,
-        why: `「同じ数ずつ 分ける」は わり算。わりきれない分が「あまり」に なるよ。`,
-        finalWhy: `${total} ÷ ${people} = ${per} あまり ${r}。1人分は ${per}${item.unit}で、${r}${item.unit} あまるね。たしかめ算：${people} × ${per} ＋ ${r} ＝ ${total}。`,
+        kind: 'judge', prompt: s.text, judgeLabels: ['正しい', 'まちがい'], judgeAnswer: s.isTrue,
+        hint: '0や 一の位に 注目して、もう一度 考えてみよう。',
+        explain: s.explain, label: s.text,
       };
     }
-    case 'wp-up': {
-      const cap = rnd(3, 6);
-      const q = rnd(6, 12);
-      const r = rnd(1, cap - 1);
-      const total = cap * q + r;
-      const scene = pick([
-        { text: (t: number, c2: number) => `${t}人の 子どもが、${c2}人ずつ 長いすに すわります。ぜんいんが すわるには、長いすは 何きゃく いりますか？`, unit: 'きゃく', emoji: '🪑', prompt: '長いすは 何きゃく いる？', why2: 'あまりの 人も すわれるように、長いすを もう1きゃく ふやそう。' },
-        { text: (t: number, c2: number) => `${t}人が ${c2}人乗りの ボートに 乗ります。ぜんいんが 乗るには、ボートは 何そう いりますか？`, unit: 'そう', emoji: '🚣', prompt: 'ボートは 何そう いる？', why2: 'あまりの 人も 乗れるように、ボートを もう1そう ふやそう。' },
-        { text: (t: number, c2: number) => `ケーキが ${t}こ あります。1つの 箱に ${c2}こずつ 入れます。ぜんぶの ケーキを 入れるには、箱は 何箱 いりますか？`, unit: '箱', emoji: '🎂', prompt: '箱は 何箱 いる？', why2: 'あまりの ケーキも 入れるために、箱を もう1箱 ふやそう。' },
-      ]);
-      const c = buildDivChoices(total, cap);
+    case 'eo-seq': {
+      const isEvenSeq = Math.random() < 0.5;
+      const start = isEvenSeq ? rnd(1, 20) * 2 : rnd(1, 20) * 2 + 1;
+      const terms = Array.from({ length: 5 }, (_, i) => start + i * 2);
+      const blankIdx = rnd(1, 3);
+      const answer = terms[blankIdx];
+      const seqDisplay = terms.map((t, i) => (i === blankIdx ? '□' : String(t))).join('、 ');
       return {
-        text: scene.text(total, cap),
-        emoji: scene.emoji, dividend: total, divisor: cap, ...c,
-        quotient: q, remainder: r, finalKind: 'up', finalAnswer: q + 1, finalUnit: scene.unit,
-        finalPrompt: scene.prompt,
-        why: `「${cap}ずつに 分けると いくつ分？」だから わり算だよ。`,
-        finalWhy: `${total} ÷ ${cap} = ${q} あまり ${r}。${scene.why2} だから 答えは ${q + 1}${scene.unit}！`,
-      };
-    }
-    case 'wp-down': {
-      const size = rnd(3, 8);
-      const q = rnd(6, 12);
-      const r = rnd(1, size - 1);
-      const total = size * q + r;
-      const scene = pick([
-        { text: (t: number, s: number) => `${t}cmの リボンから、${s}cmの リボンを 何本 切り取れますか？`, unit: '本', emoji: '🎀', prompt: '何本 切り取れる？', why2: `あまりの ${r}cmでは ${size}cmの リボンは 作れないね。` },
-        { text: (t: number, s: number) => `${t}この おかしを、1ふくろに ${s}こずつ 入れて 売ります。売れる ふくろは 何ふくろ できますか？`, unit: 'ふくろ', emoji: '🍭', prompt: '何ふくろ できる？', why2: `あまりの ${r}こでは 1ふくろに ならないね。` },
-        { text: (t: number, s: number) => `${t}ページの 本を、1日 ${s}ページずつ 読みます。${s}ページ きっちり 読める日は 何日 ありますか？`, unit: '日', emoji: '📖', prompt: '何日 ある？', why2: `あまりの ${r}ページの 日は ${size}ページに たりないね。` },
-      ]);
-      const c = buildDivChoices(total, size);
-      return {
-        text: scene.text(total, size),
-        emoji: scene.emoji, dividend: total, divisor: size, ...c,
-        quotient: q, remainder: r, finalKind: 'down', finalAnswer: q, finalUnit: scene.unit,
-        finalPrompt: scene.prompt,
-        why: `「${size}ずつに 分けると いくつ分？」だから わり算だよ。`,
-        finalWhy: `${total} ÷ ${size} = ${q} あまり ${r}。${scene.why2} だから 答えは ${q}${scene.unit}（あまりは 切り捨て）！`,
-      };
-    }
-    case 'wp-times': {
-      // 何倍かを もとめる（大問12型）: くらべられる量 ÷ もとにする量
-      const base = rnd(14, 96);
-      const k = rnd(3, 9);
-      const big = base * k;
-      const scene = pick([
-        { text: `生まれたときの 馬の体重は ${base}kgでしたが、1年後には ${big}kgに なりました。1年後の体重は、生まれたときの体重の 何倍ですか？`, emoji: '🐴' },
-        { text: `芽が出たときの ヒマワリの高さは ${base}cmでしたが、夏には ${big}cmに なりました。夏の高さは、芽が出たときの 何倍ですか？`, emoji: '🌻' },
-        { text: `先月の 図書室の かし出しは ${base}さつでしたが、今月は ${big}さつでした。今月の かし出しは、先月の 何倍ですか？`, emoji: '📚' },
-      ]);
-      const options = [`${big} ÷ ${base}`, `${base} ÷ ${big}`, `${big} − ${base}`].sort(() => Math.random() - 0.5);
-      return {
-        text: scene.text,
-        emoji: scene.emoji, dividend: big, divisor: base,
-        choices: options, correctIndex: options.indexOf(`${big} ÷ ${base}`),
-        quotient: k, remainder: 0, finalKind: 'quotient', finalAnswer: k, finalUnit: '倍',
-        finalPrompt: '何倍？',
-        why: `「何倍か」を もとめるときは、くらべられる量 ÷ もとにする量 の わり算だよ。`,
-        finalWhy: `${big} ÷ ${base} ＝ ${k}。${k}倍だね。もとにする量（${base}）で わるのが ポイント！`,
-      };
-    }
-    case 'wp-big': {
-      const divisor = rnd(12, 45);
-      const q = rnd(4, 9);
-      const r = rnd(0, divisor - 1);
-      const total = divisor * q + r;
-      const item = pick([
-        { name: '色紙', unit: 'まい', who: '人', emoji: '🎨' },
-        { name: 'えんぴつ', unit: '本', who: '人', emoji: '✏️' },
-        { name: 'シール', unit: 'まい', who: '人', emoji: '⭐' },
-      ]);
-      const c = buildDivChoices(total, divisor);
-      const hasRem = r > 0;
-      return {
-        text: `${item.name}が ${total}${item.unit} あります。${divisor}${item.who}で 同じ数ずつ 分けると、1人分は 何${item.unit}に なりますか？${hasRem ? 'あまりも 答えましょう。' : ''}`,
-        emoji: item.emoji, dividend: total, divisor, ...c,
-        quotient: q, remainder: r, finalKind: hasRem ? 'quot-rem' : 'quotient', finalAnswer: q, finalUnit: item.unit,
-        finalPrompt: hasRem ? '1人分と あまりは？' : `1人分は 何${item.unit}？`,
-        why: `大きな数でも 考え方は 同じ。ぜんぶの数 ÷ 人数 の わり算だよ。`,
-        finalWhy: `${total} ÷ ${divisor} = ${q}${hasRem ? ` あまり ${r}` : ''}。たしかめ算：${divisor} × ${q}${hasRem ? ` ＋ ${r}` : ''} ＝ ${total}。`,
+        kind: 'numeric', prompt: `${isEvenSeq ? 'ぐうすう' : 'きすう'}だけが 順番に ならんでいます。□に 入る数は？`,
+        display: seqDisplay, answerValue: answer,
+        hint: `${isEvenSeq ? 'ぐうすう' : 'きすう'}は 2ずつ 増えていくよ。前後の数と くらべてみよう。`,
+        explain: `前後の数は ${terms.filter((_, i) => i !== blankIdx).join('、 ')}。2ずつ増えるので □は ${answer}。`,
+        label: seqDisplay.replace('□', String(answer)),
       };
     }
   }
 }
 
 /* =====================================================================
- * エラーハンター（誤り例）
+ * ②偶数・奇数のせいしつ
  * =================================================================== */
 
-export const EH_REASONS = {
-  ZERO: '商に 0 を 書くのを わすれた',
-  REMBIG: 'あまりが わる数より 大きいのに 気づかなかった',
-  SUB: 'ひき算を まちがえた',
-  RULE10: '10のまとまりで 計算したのに、あまりを 10倍に もどさなかった',
-  PLACE: '商を 立てる 位を まちがえた',
+export type EorLevel = 'eor-add' | 'eor-mul' | 'eor-blank' | 'eor-trap';
+
+export const EOR_LEVELS: { id: EorLevel; label: string; desc: string }[] = [
+  { id: 'eor-add', label: 'たし算の 結果は？', desc: '計算しなくても ぐうすう・きすうが わかる！' },
+  { id: 'eor-mul', label: 'かけ算の 結果は？', desc: 'ぐうすうが 1つでもあれば…？' },
+  { id: 'eor-blank', label: '□に あてはまる 数は？', desc: '和が ぐうすう・きすうに なる条件を さがそう' },
+  { id: 'eor-trap', label: 'つまずきポイント クイズ', desc: 'よくある かんちがいに 気をつけよう' },
+];
+
+function parityLabel(isEven: boolean) { return isEven ? 'ぐうすう' : 'きすう'; }
+
+const EOR_TRAPS = [
+  { text: 'きすう＋きすうは、きすうに なる', isTrue: false, explain: 'たとえば 3+5=8。きすう＋きすうは いつも ぐうすうに なるよ。' },
+  { text: 'ぐうすう＋ぐうすうは、ぐうすうに なる', isTrue: true, explain: 'たとえば 4+6=10。その通り、ぐうすう＋ぐうすうは いつも ぐうすうだよ。' },
+  { text: 'ぐうすう＋きすうは、ぐうすうに なる', isTrue: false, explain: 'たとえば 4+5=9。ぐうすう＋きすうは いつも きすうに なるよ。' },
+  { text: 'きすうを 2つ たすと、答えは いつも ぐうすうに なる', isTrue: true, explain: 'その通り！きすう＋きすう＝ぐうすう だよ。' },
+  { text: '大きい数どうしの たし算なら、答えは いつも ぐうすうに なる', isTrue: false, explain: '大きさは 関係ないよ。101+3=104(ぐうすう)だけど 101+2=103(きすう)。ぐうすう・きすうの組み合わせで決まるんだ。' },
+  { text: '0は ぐうすうなので、0を たしても ぐうすう・きすうは かわらない', isTrue: true, explain: 'その通り！0は ぐうすうだから、たしても 種類は かわらないよ。' },
+];
+
+export function generateEor(level: EorLevel): Problem {
+  switch (level) {
+    case 'eor-add': {
+      const patterns = [{ aEven: true, bEven: true }, { aEven: false, bEven: false }, { aEven: true, bEven: false }, { aEven: false, bEven: true }];
+      const pat = pick(patterns);
+      const a = pat.aEven ? rnd(1, 40) * 2 : rnd(1, 40) * 2 + 1;
+      const b = pat.bEven ? rnd(1, 40) * 2 : rnd(1, 40) * 2 + 1;
+      const sum = a + b;
+      const isEven = sum % 2 === 0;
+      return {
+        kind: 'choice', prompt: `${a} ＋ ${b} の 答えは、計算しなくても わかるかな？`,
+        choices: ['ぐうすう', 'きすう'], answerIndex: isEven ? 0 : 1,
+        hint: `${parityLabel(pat.aEven)}＋${parityLabel(pat.bEven)} は、いつも ${isEven ? 'ぐうすう' : 'きすう'}に なるよ。`,
+        explain: `${a}+${b}＝${sum}。${parityLabel(pat.aEven)}＋${parityLabel(pat.bEven)}は ${isEven ? 'ぐうすう' : 'きすう'}に なるんだ。`,
+        label: `${a}+${b}=${sum}`,
+      };
+    }
+    case 'eor-mul': {
+      const isEvenFactor = Math.random() < 0.5;
+      const x = isEvenFactor ? rnd(1, 20) * 2 : rnd(1, 20) * 2 + 1;
+      const y = rnd(2, 20);
+      const product = x * y;
+      const isEven = product % 2 === 0;
+      return {
+        kind: 'choice', prompt: `${x} × ${y} の 答えは、ぐうすう？ きすう？`,
+        choices: ['ぐうすう', 'きすう'], answerIndex: isEven ? 0 : 1,
+        hint: isEvenFactor
+          ? 'かけ算は、かける数の どちらかが ぐうすうなら、答えは いつも ぐうすうに なるよ。'
+          : `きすう×きすうは きすう、きすう×ぐうすうは ぐうすうだよ。${y}は ぐうすう？きすう？`,
+        explain: `${x}×${y}＝${product}。${x}は ${parityLabel(isEvenFactor)}だから、答えは ${isEven ? 'ぐうすう' : 'きすう'}。`,
+        label: `${x}×${y}=${product}`,
+      };
+    }
+    case 'eor-blank': {
+      const targetEven = Math.random() < 0.5;
+      const givenEven = Math.random() < 0.5;
+      const isOddGiven = !givenEven;
+      const isOddTarget = !targetEven;
+      const isOddNeed = isOddTarget !== isOddGiven;
+      const needEven = !isOddNeed;
+      return {
+        kind: 'choice',
+        prompt: `□ ＋ ${givenEven ? 'ぐうすうの数' : 'きすうの数'} ＝ ${targetEven ? 'ぐうすうの数' : 'きすうの数'} に なるとき、□に あてはまるのは？`,
+        choices: ['ぐうすうの数', 'きすうの数'], answerIndex: needEven ? 0 : 1,
+        hint: 'たされる数と たす数の 組み合わせで、和が ぐうすうか きすうかが 決まるよ。ぐうすう・きすうの 組み合わせを 1つずつ ためしてみよう。',
+        explain: `□が ${needEven ? 'ぐうすう' : 'きすう'}のとき、${needEven ? 'ぐうすう' : 'きすう'}＋${givenEven ? 'ぐうすう' : 'きすう'}＝${targetEven ? 'ぐうすう' : 'きすう'}に なるよ。`,
+        label: `□+${givenEven ? 'ぐうすう' : 'きすう'}=${targetEven ? 'ぐうすう' : 'きすう'}`,
+      };
+    }
+    case 'eor-trap': {
+      const t = pick(EOR_TRAPS);
+      return {
+        kind: 'judge', prompt: t.text, judgeLabels: ['正しい', 'まちがい'], judgeAnswer: t.isTrue,
+        hint: '具体的な数を 当てはめて たしかめてみよう。',
+        explain: t.explain, label: t.text,
+      };
+    }
+  }
+}
+
+/* =====================================================================
+ * ③倍数みつけ隊
+ * =================================================================== */
+
+export type MultiplesLevel = 'mul-basic' | 'mul-judge' | 'mul-pick' | 'mul-count';
+
+export const MULTIPLES_LEVELS: { id: MultiplesLevel; label: string; desc: string }[] = [
+  { id: 'mul-basic', label: '□番目の 倍数', desc: '3の倍数は 3,6,9…では 10番目は？' },
+  { id: 'mul-judge', label: '倍数か どうか はんてい', desc: 'わりきれるか たしかめよう' },
+  { id: 'mul-pick', label: '倍数を えらぼう', desc: 'この中から 倍数を ぜんぶ さがそう' },
+  { id: 'mul-count', label: '範囲の中の 倍数の数', desc: '1から○までに 倍数は 何こ？' },
+];
+
+export function generateMultiples(level: MultiplesLevel): Problem {
+  switch (level) {
+    case 'mul-basic': {
+      const b = rnd(2, 12);
+      const k = rnd(3, 10);
+      const answer = b * k;
+      const shown = Array.from({ length: Math.min(k - 1, 4) }, (_, i) => b * (i + 1));
+      return {
+        kind: 'numeric', prompt: `${b}の倍数を 小さい順に ならべたとき、${k}番目の数は いくつですか？`,
+        display: `${shown.join('、 ')}、…`, answerValue: answer,
+        hint: `${b}の倍数は ${b}、${b * 2}、${b * 3}…のように ${b}ずつ 増えていくよ。${k}番目は ${b} × ${k} で もとめられるよ。`,
+        explain: `${b} × ${k} ＝ ${answer}。`, label: `${b}の倍数の${k}番目=${answer}`,
+      };
+    }
+    case 'mul-judge': {
+      const b = rnd(2, 12);
+      const wantMultiple = Math.random() < 0.5;
+      const n = wantMultiple ? b * rnd(2, 15) : (() => {
+        let v: number;
+        do { v = b * rnd(2, 15) + rnd(1, b - 1); } while (v % b === 0);
+        return v;
+      })();
+      const actual = n % b === 0;
+      return {
+        kind: 'judge', prompt: `${n} は ${b}の倍数ですか？`, display: `${n} と ${b}`,
+        judgeLabels: ['はい', 'いいえ'], judgeAnswer: actual,
+        hint: `${n} ÷ ${b} を 計算して、わりきれるか たしかめよう。`,
+        explain: actual
+          ? `${n} ÷ ${b} ＝ ${n / b} で わりきれるから、倍数だよ。`
+          : `${n} ÷ ${b} ＝ ${Math.floor(n / b)} あまり ${n % b} で わりきれないから、倍数ではないよ。`,
+        label: `${n}は${b}の倍数か=${actual ? 'はい' : 'いいえ'}`,
+      };
+    }
+    case 'mul-pick': {
+      const b = rnd(2, 9);
+      const upper = b * 12;
+      const multiplesPool = Array.from({ length: 10 }, (_, i) => b * (i + 2)).filter((x) => x <= upper);
+      const chosen = shuffle(multiplesPool).slice(0, Math.min(multiplesPool.length, rnd(3, 5)));
+      const decoys = collectUpTo(8 - chosen.length, () => nonMultipleOf(b, b + 1, upper));
+      const candidates = shuffle([...chosen, ...decoys]);
+      const answerIndices = candidates.map((c, i) => ({ c, i })).filter((x) => x.c % b === 0).map((x) => x.i);
+      return {
+        kind: 'multi', prompt: `この中から ${b}の倍数を ぜんぶ えらぼう。`,
+        choices: candidates.map(String), answerIndices,
+        hint: `それぞれの数を ${b} で わって、わりきれるか たしかめよう。`,
+        explain: `${b}の倍数は ${answerIndices.map((i) => candidates[i]).join('、 ')}。`,
+        label: `${b}の倍数えらび`,
+      };
+    }
+    case 'mul-count': {
+      const b = rnd(2, 9);
+      const N = pick([30, 40, 50, 60, 80, 100]);
+      const answer = Math.floor(N / b);
+      return {
+        kind: 'numeric', prompt: `1から ${N}までの中に、${b}の倍数は いくつ ありますか？`, answerValue: answer,
+        hint: `${N} ÷ ${b} を 計算しよう。答えの 整数の部分が、倍数の こ数だよ。`,
+        explain: `${N} ÷ ${b} ＝ ${Math.floor(N / b)} あまり ${N % b}。だから ${b}の倍数は ${answer}こ あるよ。`,
+        label: `1~${N}の${b}の倍数の数=${answer}`,
+      };
+    }
+  }
+}
+
+/* =====================================================================
+ * ④公倍数・最小公倍数
+ * =================================================================== */
+
+export type LcmLevel = 'lcm-find' | 'lcm-pick' | 'lcm-word' | 'lcm-three';
+
+export const LCM_LEVELS: { id: LcmLevel; label: string; desc: string }[] = [
+  { id: 'lcm-find', label: '最小公倍数を もとめる', desc: '2つの数の 倍数を 書き出して さがそう' },
+  { id: 'lcm-pick', label: '公倍数を えらぼう', desc: 'この中から 2数の公倍数を ぜんぶ さがそう' },
+  { id: 'lcm-word', label: '文章題（同時に そろう？）', desc: '最小公倍数の 考え方を つかおう' },
+  { id: 'lcm-three', label: '3つの数の 最小公倍数（発展）', desc: '2つずつ じゅんに もとめよう' },
+];
+
+function twoDistinct(min: number, max: number): [number, number] {
+  const a = rnd(min, max);
+  let b = rnd(min, max);
+  if (b === a) b = b === max ? min : b + 1;
+  return [a, b];
+}
+
+export function generateLcm(level: LcmLevel): Problem {
+  switch (level) {
+    case 'lcm-find': {
+      const [a, b] = twoDistinct(2, 12);
+      const l = lcmOf(a, b);
+      return {
+        kind: 'numeric', prompt: `${a}と${b}の 最小公倍数を もとめましょう。`, answerValue: l,
+        hint: `${a}の倍数（${a}、${a * 2}、${a * 3}…）と ${b}の倍数（${b}、${b * 2}、${b * 3}…）を 書き出して、はじめて出てくる 共通の数を さがそう。`,
+        explain: `${a}と${b}の 最小公倍数は ${l}。`, label: `lcm(${a},${b})=${l}`,
+      };
+    }
+    case 'lcm-pick': {
+      const [a, b] = twoDistinct(2, 9);
+      const l = lcmOf(a, b);
+      const upper = l * 3;
+      const commonPool = [l, l * 2, l * 3].filter((x) => x <= upper);
+      const chosenCommon = shuffle(commonPool).slice(0, Math.max(1, Math.min(2, commonPool.length)));
+      // a・bそれぞれの倍数のうち、もう一方の倍数ではないもの（＝公倍数ではない decoy）を列挙する。
+      // 一方が他方の倍数（例: 4と8）のときは、どちらかの候補が空になることがあるが、それでも安全。
+      const decoys = shuffle(multiplesNotOf(a, b, upper)).slice(0, 3);
+      const decoys2 = shuffle(multiplesNotOf(b, a, upper)).slice(0, 3);
+      const candidates = shuffle([...chosenCommon, ...decoys, ...decoys2]);
+      const answerIndices = candidates.map((c, i) => ({ c, i })).filter((x) => x.c % l === 0).map((x) => x.i);
+      return {
+        kind: 'multi', prompt: `この中から、${a}と${b}の 公倍数を ぜんぶ えらぼう。`,
+        choices: candidates.map(String), answerIndices,
+        hint: `公倍数は 最小公倍数（${l}）の 倍数に なっているよ。それぞれを ${l} で わって たしかめよう。`,
+        explain: `${a}と${b}の 最小公倍数は ${l}。公倍数は ${answerIndices.map((i) => candidates[i]).join('、 ')}。`,
+        label: `${a}と${b}の公倍数えらび`,
+      };
+    }
+    case 'lcm-word': {
+      const [a, b] = twoDistinct(3, 12);
+      const l = lcmOf(a, b);
+      const scene = pick([
+        { unit: 'びょう', text: (x: number, y: number) => `赤いライトは ${x}びょうごとに、青いライトは ${y}びょうごとに 光ります。今、2つとも 同時に 光りました。次に 同時に 光るのは 何びょうご ですか？` },
+        { unit: '分', text: (x: number, y: number) => `バスAは ${x}分おきに、バスBは ${y}分おきに えき を 出発します。今 2台とも 同時に 出発しました。次に 同時に 出発するのは 何分ご ですか？` },
+        { unit: '回', text: (x: number, y: number) => `太郎さんは ${x}日おきに、花子さんは ${y}日おきに 図書館へ行きます。今日 2人とも 行きました。次に 2人が 同じ日に 行くのは 何日ご ですか？` },
+      ]);
+      return {
+        kind: 'numeric', prompt: scene.text(a, b), answerValue: l,
+        hint: `${a}の倍数と ${b}の倍数で、はじめて 一致する数（＝最小公倍数）を さがそう。`,
+        explain: `${a}と${b}の 最小公倍数は ${l}。だから ${l}${scene.unit}ごに 同時に そろうよ。`,
+        label: `lcm word(${a},${b})=${l}`,
+      };
+    }
+    case 'lcm-three': {
+      const a = rnd(2, 8), b = rnd(2, 8), c = rnd(2, 8);
+      const lab = lcmOf(a, b);
+      const labc = lcmOf(lab, c);
+      return {
+        kind: 'numeric', prompt: `${a}と${b}と${c}の 最小公倍数を もとめましょう。`, answerValue: labc,
+        hint: `まず ${a}と${b}の最小公倍数を もとめて、その数と ${c}の最小公倍数を もとめよう。`,
+        explain: `${a}と${b}の最小公倍数は ${lab}。${lab}と${c}の最小公倍数は ${labc}。`,
+        label: `lcm(${a},${b},${c})=${labc}`,
+      };
+    }
+  }
+}
+
+/* =====================================================================
+ * ⑤約数みつけ隊
+ * =================================================================== */
+
+export type DivisorsLevel = 'div-judge' | 'div-pick' | 'div-count' | 'div-all';
+
+export const DIVISORS_LEVELS: { id: DivisorsLevel; label: string; desc: string }[] = [
+  { id: 'div-judge', label: '約数か どうか はんてい', desc: 'わりきれるか たしかめよう' },
+  { id: 'div-pick', label: '約数を えらぼう', desc: 'この中から 約数を ぜんぶ さがそう' },
+  { id: 'div-count', label: '約数は 何こ？', desc: 'ペアで さがすと 見落としが 少ないよ' },
+  { id: 'div-all', label: '約数を ぜんぶ みつけよう', desc: '1から その数まで ぜんぶ たしかめよう' },
+];
+
+export function generateDivisors(level: DivisorsLevel): Problem {
+  switch (level) {
+    case 'div-judge': {
+      const N = rnd(6, 60);
+      const divs = divisorsOf(N);
+      const wantDiv = Math.random() < 0.5;
+      const d = wantDiv ? pick(divs) : (() => {
+        let v: number;
+        do { v = rnd(2, N - 1); } while (N % v === 0);
+        return v;
+      })();
+      const actual = N % d === 0;
+      return {
+        kind: 'judge', prompt: `${d}は ${N}の 約数ですか？`,
+        judgeLabels: ['はい', 'いいえ'], judgeAnswer: actual,
+        hint: `${N} ÷ ${d} を 計算して、わりきれるか たしかめよう。`,
+        explain: actual ? `${N} ÷ ${d} ＝ ${N / d} で わりきれるから、約数だよ。` : `${N} ÷ ${d} は わりきれないから、約数ではないよ。`,
+        label: `${d}は${N}の約数か=${actual ? 'はい' : 'いいえ'}`,
+      };
+    }
+    case 'div-pick': {
+      const N = rnd(12, 48);
+      const divs = divisorsOf(N);
+      const chosen = shuffle(divs).slice(0, Math.min(divs.length, rnd(3, 6)));
+      const decoySet = collectUpTo(Math.max(3, 9 - chosen.length), () => rnd(2, N - 1), 300, (v) => N % v !== 0);
+      const candidates = shuffle([...chosen, ...decoySet]);
+      const answerIndices = candidates.map((c, i) => ({ c, i })).filter((x) => N % x.c === 0).map((x) => x.i);
+      return {
+        kind: 'multi', prompt: `この中から ${N}の約数を ぜんぶ えらぼう。`,
+        choices: candidates.map(String), answerIndices,
+        hint: `それぞれの数で ${N} を わって、わりきれるか たしかめよう。1と ${N}自身も 約数だよ。`,
+        explain: `${N}の約数は ${divs.join('、 ')}。`,
+        label: `${N}の約数えらび`,
+      };
+    }
+    case 'div-count': {
+      const N = rnd(12, 60);
+      const divs = divisorsOf(N);
+      return {
+        kind: 'numeric', prompt: `${N}の約数は ぜんぶで 何こ ありますか？`, answerValue: divs.length,
+        hint: `1×${N}、2×？…のように ペアで さがすと 見落としが 少ないよ。`,
+        explain: `${N}の約数は ${divs.join('、 ')}で、${divs.length}こ あるよ。`,
+        label: `${N}の約数の数=${divs.length}`,
+      };
+    }
+    case 'div-all': {
+      const N = rnd(12, 24);
+      const divs = divisorsOf(N);
+      const candidates = Array.from({ length: N }, (_, i) => i + 1);
+      const answerIndices = candidates.map((c, i) => ({ c, i })).filter((x) => N % x.c === 0).map((x) => x.i);
+      return {
+        kind: 'multi', prompt: `1から ${N}までの中から、${N}の約数を ぜんぶ えらぼう。`,
+        choices: candidates.map(String), answerIndices,
+        hint: `1×${N}、2×？、3×？…と ペアで 考えると、ぬけなく さがせるよ。`,
+        explain: `${N}の約数は ${divs.join('、 ')}。`,
+        label: `${N}の約数を全部さがす`,
+      };
+    }
+  }
+}
+
+/* =====================================================================
+ * ⑥公約数・最大公約数
+ * =================================================================== */
+
+export type GcdLevel = 'gcd-find' | 'gcd-pick' | 'gcd-word' | 'gcd-prime';
+
+export const GCD_LEVELS: { id: GcdLevel; label: string; desc: string }[] = [
+  { id: 'gcd-find', label: '最大公約数を もとめる', desc: '2つの数の 約数を 書き出して さがそう' },
+  { id: 'gcd-pick', label: '公約数を えらぼう', desc: 'この中から 2数の公約数を ぜんぶ さがそう' },
+  { id: 'gcd-word', label: '文章題（あまりなく 分ける）', desc: '最大公約数の 考え方を つかおう' },
+  { id: 'gcd-prime', label: '素数(そすう)は どれ？（発展）', desc: '約数が 2こだけの数を 見ぬこう' },
+];
+
+function commonFactorPair(min: number, max: number): [number, number] {
+  const f = rnd(2, 12);
+  let a = f * rnd(1, Math.max(1, Math.floor(max / f)));
+  let b = f * rnd(1, Math.max(1, Math.floor(max / f)));
+  a = Math.max(min, a); b = Math.max(min, b);
+  if (a === b) b = a + f;
+  if (b > max) b = a - f > 0 ? a - f : f;
+  return [a, b];
+}
+
+export function generateGcd(level: GcdLevel): Problem {
+  switch (level) {
+    case 'gcd-find': {
+      const [a, b] = commonFactorPair(6, 48);
+      const g = gcdOf(a, b);
+      return {
+        kind: 'numeric', prompt: `${a}と${b}の 最大公約数を もとめましょう。`, answerValue: g,
+        hint: `${a}の約数と ${b}の約数を 書き出して、いちばん大きい 共通の数を さがそう。`,
+        explain: `${a}と${b}の 最大公約数は ${g}。`, label: `gcd(${a},${b})=${g}`,
+      };
+    }
+    case 'gcd-pick': {
+      const [a, b] = commonFactorPair(8, 36);
+      const g = gcdOf(a, b);
+      const commonDivs = divisorsOf(g);
+      const chosenCommon = shuffle(commonDivs).slice(0, Math.min(commonDivs.length, rnd(2, 4)));
+      const decoySet = new Set<number>();
+      let guard = 0;
+      while (decoySet.size < 6 - chosenCommon.length && guard < 200) {
+        guard++;
+        const v = rnd(2, Math.max(a, b));
+        if (a % v !== 0 || b % v !== 0) decoySet.add(v);
+      }
+      const candidates = shuffle([...chosenCommon, ...decoySet]);
+      const answerIndices = candidates.map((c, i) => ({ c, i })).filter((x) => a % x.c === 0 && b % x.c === 0).map((x) => x.i);
+      return {
+        kind: 'multi', prompt: `この中から、${a}と${b}の 公約数を ぜんぶ えらぼう。`,
+        choices: candidates.map(String), answerIndices,
+        hint: `公約数は、最大公約数（${g}）の 約数に なっているよ。`,
+        explain: `${a}と${b}の 最大公約数は ${g}。公約数は ${answerIndices.map((i) => candidates[i]).join('、 ')}。`,
+        label: `${a}と${b}の公約数えらび`,
+      };
+    }
+    case 'gcd-word': {
+      const [a, b] = commonFactorPair(8, 48);
+      const g = gcdOf(a, b);
+      const scene = pick([
+        { text: (x: number, y: number) => `あめが ${x}こ、クッキーが ${y}こ あります。あまりが 出ないように、できるだけ 多くの子どもに 同じ数ずつ 分けます。何人に 分けられますか？`, unit: '人' },
+        { text: (x: number, y: number) => `色紙が ${x}まい、リボンが ${y}本 あります。あまりが 出ないように、できるだけ 多くの ふくろに 同じ数ずつ 分けて 入れます。何ふくろ できますか？`, unit: 'ふくろ' },
+      ]);
+      return {
+        kind: 'numeric', prompt: scene.text(a, b), answerValue: g,
+        hint: `「あまりなく分ける」「できるだけ多く」は 最大公約数の 考え方だよ。${a}と${b}の 公約数の中で いちばん大きい数を さがそう。`,
+        explain: `${a}と${b}の 最大公約数は ${g}。だから ${g}${scene.unit}に 分けられるよ。`,
+        label: `gcd word(${a},${b})=${g}`,
+      };
+    }
+    case 'gcd-prime': {
+      const n = rnd(2, 50);
+      const p = isPrime(n);
+      const divs = divisorsOf(n);
+      return {
+        kind: 'judge', prompt: `${n}は 素数(そすう)ですか？`,
+        judgeLabels: ['素数である', '素数でない'], judgeAnswer: p,
+        hint: `${n}の約数を 書き出してみよう。約数が 1と自分自身の 2こだけなら 素数だよ。`,
+        explain: p
+          ? `${n}の約数は 1と${n}だけ（2こ）だから、素数だよ。`
+          : `${n}の約数は ${divs.join('、 ')}で、2こより多いから 素数ではないよ。`,
+        label: `${n}は素数か=${p ? 'はい' : 'いいえ'}`,
+      };
+    }
+  }
+}
+
+/* =====================================================================
+ * ⑦エラーハンター（頻出の誤解）
+ * =================================================================== */
+
+const EH_REASONS = {
+  ZERO: '0が ぐうすうであることを わすれていた',
+  ONE_PRIME: '1の約数は 1こだけ（自分自身と同じ）で、2こないことに 気づかなかった',
+  SELF: 'ある数は 自分自身でも わりきれる（自分自身も約数）ことを わすれていた',
+  ONE_DIV: 'どんな数も 1で わりきれる（1も約数）ことを わすれていた',
+  SWAP: '最大公約数と 最小公倍数を 反対に おぼえていた',
+  SKIP: '倍数を 書き出すとき、とちゅうを とばしてしまった',
+  ODDODD: 'きすう＋きすうは ぐうすうに なることを 知らなかった',
 };
 
-export type EhPreset = 'eh-zero' | 'eh-zerotail' | 'eh-rembig' | 'eh-sub' | 'eh-rule10' | 'eh-place';
+export type EhPreset = 'eh-zero' | 'eh-one-prime' | 'eh-self' | 'eh-one-div' | 'eh-swap' | 'eh-skip' | 'eh-oddodd';
 
-export interface DivErrorExample {
+export interface NumError {
   character: string;
-  expr: string; // 「618 ÷ 6 = 13」のような誤りを含む式
+  statement: string;
   isCorrect: boolean;
-  /** 筆算のわく表示用（誤った商の位置も再現できる） */
-  dividendN: number;
-  divisorN: number;
-  wrongQ: number;
-  wrongR: number;
-  /** 誤った商を書きはじめる列（省略時は右づめ） */
-  wrongOffset?: number;
-  correctQ: number;
-  correctR: number;
-  hasRem: boolean;
+  fixKind?: 'numeric' | 'choice2';
+  choice2Labels?: [string, string];
+  correctChoiceIsFirst?: boolean;
+  fixPrompt?: string;
+  correctNumeric?: number;
   reasonOptions: string[];
   correctReasonIndex: number;
   fixHint: string;
@@ -674,178 +619,126 @@ function buildEhReasons(correct: string): { options: string[]; index: number } {
   return { options, index: options.indexOf(correct) };
 }
 
-const fmtDiv = (dd: number, dv: number, q: number, r: number) =>
-  `${dd} ÷ ${dv} = ${q}${r > 0 ? ` あまり ${r}` : ''}`;
+type EhBuilder = () => NumError;
 
-type EhBuilder = () => DivErrorExample;
-
-// 商の0の書きわすれ（618÷6=13 → 正 103）: 長除法で最頻出の系統的バグ
 const ehZero: EhBuilder = () => {
-  const divisor = rnd(2, 9);
-  const candidates = [102, 103, 104, 105, 106, 107, 108, 109, 120, 130, 140, 150, 160, 201, 203, 205, 210, 230, 302, 305, 310, 320, 405, 410]
-    .filter((x) => x * divisor <= 999);
-  if (candidates.length === 0) return ehZero();
-  const q = pick(candidates);
-  const dividend = divisor * q;
-  const wrongQ = Number(q.toString().replace('0', '')); // 0を1つ落とす
   const r = buildEhReasons(EH_REASONS.ZERO);
   return {
-    character: pick(EH_CHARS),
-    expr: fmtDiv(dividend, divisor, wrongQ, 0),
-    isCorrect: false,
-    dividendN: dividend, divisorN: divisor, wrongQ, wrongR: 0,
-    correctQ: q, correctR: 0, hasRem: false,
+    character: pick(EH_CHARS), statement: '0は きすうです。', isCorrect: false,
+    fixKind: 'choice2', choice2Labels: ['ぐうすう', 'きすう'], correctChoiceIsFirst: true, fixPrompt: '0は 本当は？',
     reasonOptions: r.options, correctReasonIndex: r.index,
-    fixHint: `たしかめ算を してみよう。${divisor} × ${wrongQ} は ${dividend} に なるかな？ わられる数が ${dividend.toString().length}けた なら、商の けた数も よく たしかめて。`,
-    explain: `わけられない 位には 商に「0」を 立てるよ。正しくは ${fmtDiv(dividend, divisor, q, 0)}。`,
+    fixHint: '0 ÷ 2 は わりきれるかな？',
+    explain: '0は 2で わりきれる（0÷2＝0）ので、ぐうすうだよ。',
   };
 };
 
-// あまり ≧ わる数（74÷9=7あまり11 → 正 8あまり2）。ときどき2けたの わる数でも出す
-const ehRemBig: EhBuilder = () => {
-  const divisor = Math.random() < 0.5 ? rnd(4, 9) : rnd(12, 28);
-  const q = divisor >= 10 ? rnd(12, 33) : rnd(3, 9);
-  const rTrue = rnd(0, divisor - 2);
-  const dividend = divisor * q + rTrue;
-  const wrongQ = q - 1;
-  const wrongR = rTrue + divisor;
-  const r = buildEhReasons(EH_REASONS.REMBIG);
+const ehOnePrime: EhBuilder = () => {
+  const r = buildEhReasons(EH_REASONS.ONE_PRIME);
   return {
-    character: pick(EH_CHARS),
-    expr: fmtDiv(dividend, divisor, wrongQ, wrongR),
-    isCorrect: false,
-    dividendN: dividend, divisorN: divisor, wrongQ, wrongR,
-    correctQ: q, correctR: rTrue, hasRem: rTrue > 0,
+    character: pick(EH_CHARS), statement: '1は 素数(そすう)です。', isCorrect: false,
+    fixKind: 'choice2', choice2Labels: ['素数である', '素数でない'], correctChoiceIsFirst: false, fixPrompt: '1は 本当は？',
     reasonOptions: r.options, correctReasonIndex: r.index,
-    fixHint: `あまりの ${wrongR} と わる数の ${divisor} を くらべてみよう。まだ ${divisor} を ひけるよね。商を 1 ふやして みよう。`,
-    explain: `あまりは いつも わる数より 小さくなるよ。正しくは ${fmtDiv(dividend, divisor, q, rTrue)}。`,
+    fixHint: '1の約数を 書き出してみよう。いくつ あるかな？',
+    explain: '素数は 約数が ちょうど2こ（1と自分自身）の数。1の約数は 1だけ（1こ）だから、素数ではないよ。',
   };
 };
 
-// ひき算ミス（あまりが±1ずれる）
-const ehSub: EhBuilder = () => {
-  const divisor = rnd(4, 9);
-  const q = rnd(12, 24);
-  const rTrue = rnd(1, divisor - 2);
-  const dividend = divisor * q + rTrue;
-  const wrongR = rTrue + pick([1, -1].filter((d) => rTrue + d >= 0 && rTrue + d < divisor)) ;
-  const r = buildEhReasons(EH_REASONS.SUB);
+const ehSelf: EhBuilder = () => {
+  const N = rnd(10, 30);
+  const divs = divisorsOf(N);
+  const shown = divs.filter((d) => d !== N);
+  const r = buildEhReasons(EH_REASONS.SELF);
   return {
-    character: pick(EH_CHARS),
-    expr: fmtDiv(dividend, divisor, q, wrongR),
-    isCorrect: false,
-    dividendN: dividend, divisorN: divisor, wrongQ: q, wrongR,
-    correctQ: q, correctR: rTrue, hasRem: rTrue > 0,
+    character: pick(EH_CHARS), statement: `${N}の約数は ${shown.join('、 ')} です。`, isCorrect: false,
+    fixKind: 'numeric', fixPrompt: 'ぬけている約数は？', correctNumeric: N,
     reasonOptions: r.options, correctReasonIndex: r.index,
-    fixHint: `たしかめ算を してみよう。${divisor} × ${q} ＋ ${wrongR} は ${dividend} に なるかな？`,
-    explain: `たしかめ算で ${divisor} × ${q} ＋ あまり ＝ ${dividend} に なるように、ひき算を 見直そう。正しくは ${fmtDiv(dividend, divisor, q, rTrue)}。`,
+    fixHint: `${N} ÷ ${N} を 考えてみよう。`,
+    explain: `${N}自身も ${N}の約数だよ。正しくは ${divs.join('、 ')}。`,
   };
 };
 
-// わり算のきまりの あまり（140÷30=4あまり2 → 正 4あまり20）
-const ehRule10: EhBuilder = () => {
-  const d0 = rnd(3, 9);
-  const q = rnd(2, 9);
-  const r0 = rnd(1, d0 - 1);
-  const divisor = d0 * 10;
-  const dividend = divisor * q + r0 * 10;
-  const r = buildEhReasons(EH_REASONS.RULE10);
+const ehOneDiv: EhBuilder = () => {
+  const N = rnd(10, 30);
+  const divs = divisorsOf(N);
+  const shown = divs.filter((d) => d !== 1);
+  const r = buildEhReasons(EH_REASONS.ONE_DIV);
   return {
-    character: pick(EH_CHARS),
-    expr: fmtDiv(dividend, divisor, q, r0),
-    isCorrect: false,
-    dividendN: dividend, divisorN: divisor, wrongQ: q, wrongR: r0,
-    correctQ: q, correctR: r0 * 10, hasRem: true,
+    character: pick(EH_CHARS), statement: `${N}の約数は ${shown.join('、 ')} です。`, isCorrect: false,
+    fixKind: 'numeric', fixPrompt: 'ぬけている約数は？', correctNumeric: 1,
     reasonOptions: r.options, correctReasonIndex: r.index,
-    fixHint: `たしかめ算を してみよう。${divisor} × ${q} ＋ ${r0} は ${dividend} に なるかな？ あまりは「10のまとまり ${r0}こ分」だよ。`,
-    explain: `${dividend / 10} ÷ ${d0} で 計算したときの あまり ${r0} は 10が ${r0}こ という意味。正しくは ${fmtDiv(dividend, divisor, q, r0 * 10)}。`,
+    fixHint: 'どんな数も、1で わると わりきれるよ。',
+    explain: `1は どんな数の約数にも なるよ。正しくは ${divs.join('、 ')}。`,
   };
 };
 
-// 正しい例（まぜる）
+const ehSwap: EhBuilder = () => {
+  const [a, b] = twoDistinct(4, 20);
+  const g = gcdOf(a, b);
+  const l = lcmOf(a, b);
+  const r = buildEhReasons(EH_REASONS.SWAP);
+  return {
+    character: pick(EH_CHARS), statement: `${a}と${b}の 最大公約数は ${l} です。`, isCorrect: false,
+    fixKind: 'numeric', fixPrompt: '正しい最大公約数は？', correctNumeric: g,
+    reasonOptions: r.options, correctReasonIndex: r.index,
+    fixHint: `${a}と${b}の 約数を それぞれ書き出して、共通のものを さがそう。`,
+    explain: `${l}は 最小公倍数だよ。最大公約数は ${g}。`,
+  };
+};
+
+const ehSkip: EhBuilder = () => {
+  const b = rnd(3, 9);
+  const terms = [b, b * 2, b * 3, b * 4, b * 5];
+  const skipIdx = rnd(1, 3);
+  const shown = terms.filter((_, i) => i !== skipIdx);
+  const r = buildEhReasons(EH_REASONS.SKIP);
+  return {
+    character: pick(EH_CHARS), statement: `${b}の倍数を 小さい順に書くと ${shown.join('、 ')}… です。`, isCorrect: false,
+    fixKind: 'numeric', fixPrompt: 'ぬけている数は？', correctNumeric: terms[skipIdx],
+    reasonOptions: r.options, correctReasonIndex: r.index,
+    fixHint: `${b}ずつ 増えているはず。前後の数と くらべてみよう。`,
+    explain: `正しくは ${terms.join('、 ')}。${terms[skipIdx]}が ぬけていたね。`,
+  };
+};
+
+const ehOddOdd: EhBuilder = () => {
+  const a = rnd(1, 20) * 2 + 1;
+  const b = rnd(1, 20) * 2 + 1;
+  const sum = a + b;
+  const r = buildEhReasons(EH_REASONS.ODDODD);
+  return {
+    character: pick(EH_CHARS), statement: `${a} ＋ ${b} の答えは、きすうです。`, isCorrect: false,
+    fixKind: 'choice2', choice2Labels: ['ぐうすう', 'きすう'], correctChoiceIsFirst: true, fixPrompt: '本当の答えの種類は？',
+    reasonOptions: r.options, correctReasonIndex: r.index,
+    fixHint: `${a}+${b}を 実さいに 計算してみよう。`,
+    explain: `${a}+${b}＝${sum}。きすう＋きすうは いつも ぐうすうに なるよ。`,
+  };
+};
+
 const ehCorrect: EhBuilder = () => {
-  const divisor = rnd(3, 9);
-  const q = rnd(8, 30);
-  const rTrue = rnd(0, divisor - 1);
-  const dividend = divisor * q + rTrue;
+  const variants = [
+    () => { const N = rnd(10, 30); const divs = divisorsOf(N); return { statement: `${N}の約数は ${divs.join('、 ')} です。`, explain: `${divs.join('、 ')}で ぜんぶ 合っているね！` }; },
+    () => { const b = rnd(2, 9); const terms = [b, b * 2, b * 3, b * 4]; return { statement: `${b}の倍数を 小さい順に書くと ${terms.join('、 ')}… です。`, explain: 'その通り、ぬけなく 書けているね！' }; },
+    () => { const n = rnd(1, 60); const isEven = n % 2 === 0; return { statement: `${n}は ${isEven ? 'ぐうすう' : 'きすう'}です。`, explain: `一の位が「${n % 10}」だから 合っているね！` }; },
+    () => { const [a, b] = commonFactorPair(6, 30); const g = gcdOf(a, b); return { statement: `${a}と${b}の 最大公約数は ${g} です。`, explain: '正しい！約数を書き出して確認できたね。' }; },
+  ];
+  const v = pick(variants)();
   return {
-    character: pick(EH_CHARS),
-    expr: fmtDiv(dividend, divisor, q, rTrue),
-    isCorrect: true,
-    dividendN: dividend, divisorN: divisor, wrongQ: q, wrongR: rTrue,
-    correctQ: q, correctR: rTrue, hasRem: rTrue > 0,
-    reasonOptions: [], correctReasonIndex: -1,
-    fixHint: '',
-    explain: `たしかめ算：${divisor} × ${q}${rTrue > 0 ? ` ＋ ${rTrue}` : ''} ＝ ${dividend}。この計算は 正しかったね！`,
+    character: pick(EH_CHARS), statement: v.statement, isCorrect: true,
+    reasonOptions: [], correctReasonIndex: -1, fixHint: '', explain: v.explain,
   };
 };
 
-// 商の末尾の0の書きわすれ（652÷16=4あまり12 → 正 40あまり12）: テスト大問6の頻出型
-const ehZeroTail: EhBuilder = () => {
-  for (let i = 0; i < 300; i++) {
-    const divisor = rnd(12, 24);
-    const k = rnd(2, 9);
-    const r = rnd(1, divisor - 1);
-    const dividend = divisor * k * 10 + r;
-    if (dividend > 999) continue;
-    const rs = buildEhReasons(EH_REASONS.ZERO);
-    return {
-      character: pick(EH_CHARS),
-      expr: fmtDiv(dividend, divisor, k, r),
-      isCorrect: false,
-      dividendN: dividend, divisorN: divisor, wrongQ: k, wrongR: r,
-      correctQ: k * 10, correctR: r, hasRem: true,
-      reasonOptions: rs.options, correctReasonIndex: rs.index,
-      fixHint: `たしかめ算を してみよう。${divisor} × ${k} ＋ ${r} は ${dividend} に なるかな？ 一の位にも 商（0）を 立てるのを わすれていないかな。`,
-      explain: `一の位は ${r} ＜ ${divisor} で わけられないから、商に「0」を 立てるよ。正しくは ${fmtDiv(dividend, divisor, k * 10, r)}。`,
-    };
-  }
-  return ehZero();
-};
-
-// 商を立てる位置のまちがい（758÷21 の商36を 百の位から 書いてしまう）: いかそう算数型
-const ehPlace: EhBuilder = () => {
-  for (let i = 0; i < 300; i++) {
-    const divisor = rnd(21, 45);
-    const q = rnd(12, 39);
-    const r = rnd(0, divisor - 1);
-    const dividend = divisor * q + r;
-    if (dividend > 999 || dividend < 100) continue;
-    // 頭の1けたが わる数より小さい（＝百の位に商はたたない）形にする
-    if (Math.floor(dividend / 100) >= divisor) continue;
-    const rs = buildEhReasons(EH_REASONS.PLACE);
-    return {
-      character: pick(EH_CHARS),
-      expr: `${dividend} ÷ ${divisor} の商 ${q} を 百の位から 書いた`,
-      isCorrect: false,
-      dividendN: dividend, divisorN: divisor, wrongQ: q, wrongR: r,
-      wrongOffset: 0, // 百の位から書いてしまっている
-      correctQ: q, correctR: r, hasRem: r > 0,
-      reasonOptions: rs.options, correctReasonIndex: rs.index,
-      fixHint: `${dividend} の 百の位「${Math.floor(dividend / 100)}」の中に ${divisor} は 入るかな？ 入らないときは、商は 十の位から たつよ。`,
-      explain: `${Math.floor(dividend / 100)} ＜ ${divisor} だから 商は 百の位には たたないよ。十の位から ${fmtDiv(dividend, divisor, q, r).split('= ')[1]} と 書くのが 正しいね。`,
-    };
-  }
-  return ehRemBig();
-};
-
-const EH_BUILDERS: EhBuilder[] = [ehZero, ehZeroTail, ehRemBig, ehSub, ehRule10, ehPlace];
+const EH_BUILDERS: EhBuilder[] = [ehZero, ehOnePrime, ehSelf, ehOneDiv, ehSwap, ehSkip, ehOddOdd];
 const EH_PRESETS: Record<EhPreset, EhBuilder> = {
-  'eh-zero': ehZero,
-  'eh-zerotail': ehZeroTail,
-  'eh-rembig': ehRemBig,
-  'eh-sub': ehSub,
-  'eh-rule10': ehRule10,
-  'eh-place': ehPlace,
+  'eh-zero': ehZero, 'eh-one-prime': ehOnePrime, 'eh-self': ehSelf, 'eh-one-div': ehOneDiv,
+  'eh-swap': ehSwap, 'eh-skip': ehSkip, 'eh-oddodd': ehOddOdd,
 };
 
-/** ランダムに誤り例（ときどき正しい例）を生成。 */
-export function generateDivError(): DivErrorExample {
+export function generateNumError(): NumError {
   if (Math.random() < 0.25) return ehCorrect();
   return pick(EH_BUILDERS)();
 }
 
-/** 本番テスト用：誤りの種類を指定して生成。 */
-export function makeDivError(preset: EhPreset): DivErrorExample {
+export function makeNumError(preset: EhPreset): NumError {
   return EH_PRESETS[preset]();
 }

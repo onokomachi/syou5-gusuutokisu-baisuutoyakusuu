@@ -70,7 +70,7 @@ export const SetupScreen: React.FC<{ title: string; subtitle?: string; onBack: (
   <div className="w-full h-full overflow-y-auto">
     <div className="max-w-3xl mx-auto px-4 py-6">
       <button onClick={onBack} className="flex items-center gap-2 text-muted hover:text-content font-bold px-3 py-2 rounded-xl hover:bg-surface-3 transition-colors mb-2">
-        <ChevronLeft size={24} /> わり算ランドへ
+        <ChevronLeft size={24} /> ホームへ
       </button>
       <h1 className="text-3xl font-black text-content text-center mb-1">{title}</h1>
       {subtitle && <p className="text-muted text-center font-medium mb-6">{subtitle}</p>}
