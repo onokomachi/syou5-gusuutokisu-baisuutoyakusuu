@@ -1,0 +1,6 @@
+{
+  "name": "わり算筆算シミュレーター",
+  "description": "小学4年生向け。タッチ操作で段階的に割り算の筆算を学べるインタラクティブな学習パズル。",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

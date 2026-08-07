@@ -1,0 +1,403 @@
+@import url('https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=DotGothic16&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Share+Tech+Mono&family=Yuji+Syuku&family=Zen+Antique+Soft&display=swap');
+@import "tailwindcss";
+
+/*
+ * デザイントークン。色は「セマンティック変数(--c-*)」を data-theme ごとに上書きし、
+ * Tailwind の色トークン(--color-*)はそれを参照する。
+ * これにより bg-surface / text-content / border-line などが全テーマで自動追従する。
+ */
+@theme inline {
+  --font-sans: "BIZ UDPGothic", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-bg: var(--c-bg);
+  --color-surface: var(--c-surface);
+  --color-surface-2: var(--c-surface-2);
+  --color-surface-3: var(--c-surface-3);
+  --color-content: var(--c-content);
+  --color-muted: var(--c-muted);
+  --color-faint: var(--c-faint);
+  --color-line: var(--c-line);
+  --color-brand: var(--c-brand);
+  --color-brand-strong: var(--c-brand-strong);
+  --color-on-brand: var(--c-on-brand);
+
+  --radius-card: 28px;
+}
+
+@layer base {
+  /* 既定（light） */
+  :root,
+  body[data-theme='light'] {
+    --c-bg: #eef2f7;
+    --c-surface: #ffffff;
+    --c-surface-2: #f6f8fb;
+    --c-surface-3: #eaeef4;
+    --c-content: #1e293b;
+    --c-muted: #5b6b80;
+    --c-faint: #94a3b8;
+    --c-line: #e4e9f0;
+    --c-brand: #2563eb;
+    --c-brand-strong: #1d4ed8;
+    --c-on-brand: #ffffff;
+  }
+  /* ダーク = マトリックス（電脳世界）テーマ：真っ黒 × 蛍光グリーン。
+     パネルは完全不透明にしてスマホでも背景が確実に黒くなるようにする
+     （半透明だと下のレイヤーの色がにじんで白っぽく見えるため）。 */
+  body[data-theme='dark'] {
+    --c-bg: #000000;
+    --c-surface: #050d07;
+    --c-surface-2: #020803;
+    --c-surface-3: #08160b;
+    --c-content: #5dff7a;
+    --c-muted: #2fd148;
+    --c-faint: #1f9a32;
+    --c-line: #1bb838;
+    --c-brand: #00ff41;
+    --c-brand-strong: #9dff7a;
+    --c-on-brand: #001503;
+  }
+
+  /* ▼ 特別解放テーマ（バッジ収集で解放）。いずれも「暗い背景 × ネオン」系。
+     --neon(r,g,b)/--panel/--panel-strong は §共有オーバーライドで使う追加トークン。 */
+
+  /* 桜吹雪（さくらふぶき）= 夜桜：漆黒の夜空 × 舞い散る桜の花びら × ピンクのネオン。バッジ50%で解放 */
+  body[data-theme='sakura'] {
+    --c-bg: #0d0416;
+    --c-surface: #170a22;
+    --c-surface-2: #0a020f;
+    --c-surface-3: #221033;
+    --c-content: #ffd3e4;
+    --c-muted: #e08fb4;
+    --c-faint: #a05f85;
+    --c-line: #7c3a63;
+    --c-brand: #ff7bac;
+    --c-brand-strong: #ffb3cf;
+    --c-on-brand: #23000f;
+    --neon: 255, 140, 185;
+    --panel: #1a0b24;
+    --panel-strong: rgba(120, 40, 85, 0.85);
+  }
+
+  /* インフェルノ = 業火：黒曜石の闇 × 立ちのぼる火の粉 × 深紅の炎。バッジ75%で解放 */
+  body[data-theme='inferno'] {
+    --c-bg: #0a0100;
+    --c-surface: #180502;
+    --c-surface-2: #0c0200;
+    --c-surface-3: #240903;
+    --c-content: #ffb37a;
+    --c-muted: #e0713a;
+    --c-faint: #9c4a22;
+    --c-line: #86341a;
+    --c-brand: #ff5a1f;
+    --c-brand-strong: #ff9558;
+    --c-on-brand: #1c0500;
+    --neon: 255, 100, 30;
+    --panel: #1c0703;
+    --panel-strong: rgba(130, 40, 5, 0.85);
+  }
+
+  /* 天空神（てんくうしん）= 神々の空：黄昏の大空 × 金色の光条 × 流れる雲。バッジ100%で解放 */
+  body[data-theme='tenkuu'] {
+    --c-bg: #041022;
+    --c-surface: #0a1c34;
+    --c-surface-2: #030b1a;
+    --c-surface-3: #12294a;
+    --c-content: #ffe9a8;
+    --c-muted: #a8cbe8;
+    --c-faint: #6d8fb5;
+    --c-line: #3c608c;
+    --c-brand: #ffd24a;
+    --c-brand-strong: #ffe58f;
+    --c-on-brand: #221a00;
+    --neon: 255, 215, 120;
+    --panel: #081a30;
+    --panel-strong: rgba(60, 100, 160, 0.82);
+  }
+
+  /* 極光（きょっこう）= オーロラ：北極の夜空 × 緑＋紫の光のカーテン。バッジ75%で解放 */
+  body[data-theme='aurora'] {
+    --c-bg: #020309;
+    --c-surface: #060c16;
+    --c-surface-2: #02040a;
+    --c-surface-3: #0c1426;
+    --c-content: #b6ffc8;
+    --c-muted: #79e0c4;
+    --c-faint: #569aa0;
+    --c-line: #2f7a72;
+    --c-brand: #c56bff;
+    --c-brand-strong: #e3b0ff;
+    --c-on-brand: #0a0420;
+    --neon: 120, 255, 170;
+    --panel: #070e1a;
+    --panel-strong: rgba(70, 35, 110, 0.82);
+  }
+
+
+  body {
+    @apply text-content font-sans antialiased overflow-hidden;
+    background-color: var(--color-bg);
+  }
+
+  /* スマホの FOUC・合成誤差対策: ダークテーマは背景を絶対に黒に固定する */
+  body[data-theme='dark'] {
+    background-color: #000000 !important;
+  }
+
+  /* マトリックス世界観：ドットマトリックス・フォント＋文字のネオン発光 */
+  body[data-theme='dark'] {
+    font-family: "DotGothic16", "Share Tech Mono", "JetBrains Mono", ui-monospace, monospace;
+    text-shadow: 0 0 4px rgba(0, 255, 65, 0.4), 0 0 10px rgba(0, 255, 65, 0.2);
+    letter-spacing: 0.04em;
+  }
+
+
+  /* スマホの FOUC・合成誤差対策: 暗背景テーマは背景色を確実に固定する */
+  body[data-theme='aurora'] { background-color: #020309 !important; }
+  body[data-theme='sakura'] { background-color: #0d0416 !important; }
+  body[data-theme='inferno'] { background-color: #0a0100 !important; }
+  body[data-theme='tenkuu'] { background-color: #041022 !important; }
+
+  /* 極光：やわらかな緑白の発光（オーロラ） */
+  body[data-theme='aurora'] {
+    font-family: "BIZ UDPGothic", "Inter", ui-sans-serif, sans-serif;
+    text-shadow: 0 0 5px rgba(120, 255, 170, 0.4), 0 0 12px rgba(150, 120, 255, 0.25);
+    letter-spacing: 0.03em;
+  }
+  /* 桜吹雪：ほんのり桜色の発光 */
+  body[data-theme='sakura'] {
+    font-family: "BIZ UDPGothic", "Inter", ui-sans-serif, sans-serif;
+    text-shadow: 0 0 5px rgba(255, 140, 185, 0.35), 0 0 12px rgba(255, 140, 185, 0.18);
+    letter-spacing: 0.03em;
+  }
+  /* インフェルノ：炎のゆらめく発光 */
+  body[data-theme='inferno'] {
+    font-family: "BIZ UDPGothic", "Inter", ui-sans-serif, sans-serif;
+    text-shadow: 0 0 5px rgba(255, 100, 30, 0.45), 0 0 14px rgba(255, 60, 0, 0.22);
+    letter-spacing: 0.03em;
+  }
+  /* 天空神：神々しい金色の光 */
+  body[data-theme='tenkuu'] {
+    font-family: "BIZ UDPGothic", "Inter", ui-sans-serif, sans-serif;
+    text-shadow: 0 0 5px rgba(255, 215, 120, 0.45), 0 0 12px rgba(160, 200, 255, 0.22);
+    letter-spacing: 0.03em;
+  }
+}
+
+/* =====================================================================
+ * マトリックステーマの一括上書き（@layer 外＝Tailwind ユーティリティに勝つ）。
+ * 各コンポーネントがハードコードしている明るい固定色クラスを、
+ * 黒×ネオングリーンの世界観へまとめて変換する。
+ * （hover:/active: などのバリアントはクラス名が別なので影響しない）
+ * ===================================================================== */
+
+/* 明るい淡色背景（-50/-100/-200・白・スレート）→ 半透明の黒緑パネル */
+body[data-theme='dark'] .bg-white,
+body[data-theme='dark'] .bg-blue-50, body[data-theme='dark'] .bg-blue-100,
+body[data-theme='dark'] .bg-sky-50, body[data-theme='dark'] .bg-indigo-50,
+body[data-theme='dark'] .bg-emerald-50, body[data-theme='dark'] .bg-emerald-100,
+body[data-theme='dark'] .bg-green-50, body[data-theme='dark'] .bg-green-100,
+body[data-theme='dark'] .bg-teal-50, body[data-theme='dark'] .bg-cyan-50,
+body[data-theme='dark'] .bg-violet-50, body[data-theme='dark'] .bg-violet-100,
+body[data-theme='dark'] .bg-purple-50, body[data-theme='dark'] .bg-amber-50,
+body[data-theme='dark'] .bg-amber-100, body[data-theme='dark'] .bg-orange-50,
+body[data-theme='dark'] .bg-rose-50, body[data-theme='dark'] .bg-rose-100,
+body[data-theme='dark'] .bg-red-50, body[data-theme='dark'] .bg-pink-50,
+body[data-theme='dark'] .bg-slate-50, body[data-theme='dark'] .bg-slate-100,
+body[data-theme='dark'] .bg-slate-200 {
+  background-color: #050f07 !important;
+  border-color: rgba(0, 255, 65, 0.35);
+}
+
+/* 濃い原色背景（ボタン・バナー・グラデ）→ 暗い緑＋ネオン枠＋発光 */
+body[data-theme='dark'] .bg-blue-500, body[data-theme='dark'] .bg-blue-600,
+body[data-theme='dark'] .bg-blue-700, body[data-theme='dark'] .bg-indigo-500,
+body[data-theme='dark'] .bg-indigo-600, body[data-theme='dark'] .bg-emerald-500,
+body[data-theme='dark'] .bg-emerald-600, body[data-theme='dark'] .bg-green-500,
+body[data-theme='dark'] .bg-green-600, body[data-theme='dark'] .bg-violet-500,
+body[data-theme='dark'] .bg-violet-600, body[data-theme='dark'] .bg-amber-500,
+body[data-theme='dark'] .bg-amber-600, body[data-theme='dark'] .bg-rose-500,
+body[data-theme='dark'] .bg-rose-600, body[data-theme='dark'] .bg-red-500,
+body[data-theme='dark'] .bg-slate-800, body[data-theme='dark'] .bg-slate-900 {
+  background-color: rgba(0, 50, 16, 0.85) !important;
+  background-image: none !important;
+  border: 1px solid rgba(0, 255, 65, 0.6);
+  box-shadow: 0 0 16px rgba(0, 255, 65, 0.35), inset 0 0 14px rgba(0, 255, 65, 0.12);
+}
+
+/* グラデーション背景（テストバナー等）→ 緑のグラデに差し替え */
+body[data-theme='dark'] .bg-gradient-to-r,
+body[data-theme='dark'] .bg-gradient-to-br,
+body[data-theme='dark'] .bg-gradient-to-b,
+body[data-theme='dark'] .bg-gradient-to-bl {
+  background-image: linear-gradient(135deg, rgba(0, 70, 22, 0.9), rgba(0, 25, 8, 0.9)) !important;
+  border: 1px solid rgba(0, 255, 65, 0.55);
+  box-shadow: 0 0 18px rgba(0, 255, 65, 0.3);
+}
+
+/* 半透明の白タイル（bg-white/20 等）→ 緑タイル */
+body[data-theme='dark'] [class*="bg-white/"] {
+  background-color: rgba(0, 255, 65, 0.14) !important;
+}
+
+/* 原色テキスト → グリーン */
+body[data-theme='dark'] .text-blue-500, body[data-theme='dark'] .text-blue-600,
+body[data-theme='dark'] .text-blue-700, body[data-theme='dark'] .text-blue-800,
+body[data-theme='dark'] .text-sky-600, body[data-theme='dark'] .text-indigo-600,
+body[data-theme='dark'] .text-emerald-600, body[data-theme='dark'] .text-emerald-700,
+body[data-theme='dark'] .text-green-600, body[data-theme='dark'] .text-green-700,
+body[data-theme='dark'] .text-teal-600, body[data-theme='dark'] .text-cyan-600,
+body[data-theme='dark'] .text-violet-600, body[data-theme='dark'] .text-violet-700,
+body[data-theme='dark'] .text-purple-600, body[data-theme='dark'] .text-amber-600,
+body[data-theme='dark'] .text-amber-700, body[data-theme='dark'] .text-amber-800,
+body[data-theme='dark'] .text-orange-600, body[data-theme='dark'] .text-rose-500,
+body[data-theme='dark'] .text-rose-600, body[data-theme='dark'] .text-red-500,
+body[data-theme='dark'] .text-red-600, body[data-theme='dark'] .text-pink-600,
+body[data-theme='dark'] .text-slate-600, body[data-theme='dark'] .text-slate-700,
+body[data-theme='dark'] .text-slate-800, body[data-theme='dark'] .text-slate-900,
+body[data-theme='dark'] .text-gray-700, body[data-theme='dark'] .text-gray-800 {
+  color: #5dff7a !important;
+}
+
+/* 原色ボーダー → 緑 */
+body[data-theme='dark'] .border-blue-100, body[data-theme='dark'] .border-blue-200,
+body[data-theme='dark'] .border-blue-300, body[data-theme='dark'] .border-amber-100,
+body[data-theme='dark'] .border-amber-200, body[data-theme='dark'] .border-amber-300,
+body[data-theme='dark'] .border-emerald-200, body[data-theme='dark'] .border-emerald-300,
+body[data-theme='dark'] .border-violet-200, body[data-theme='dark'] .border-rose-200,
+body[data-theme='dark'] .border-green-200, body[data-theme='dark'] .border-green-300,
+body[data-theme='dark'] .border-slate-200, body[data-theme='dark'] .border-slate-300 {
+  border-color: rgba(0, 255, 65, 0.45) !important;
+}
+
+/* リング色 → 緑 */
+body[data-theme='dark'] .ring-blue-200, body[data-theme='dark'] .ring-amber-200,
+body[data-theme='dark'] .ring-emerald-200, body[data-theme='dark'] .ring-violet-200,
+body[data-theme='dark'] .ring-rose-200 {
+  --tw-ring-color: rgba(0, 255, 65, 0.4) !important;
+}
+
+/* 枠線つきカードに薄いネオングロー */
+body[data-theme='dark'] .border-line,
+body[data-theme='dark'] .border {
+  box-shadow: 0 0 14px rgba(0, 255, 65, 0.1), inset 0 0 16px rgba(0, 255, 65, 0.04);
+}
+
+/* 筆算セルは数字の視認性優先で等幅フォント＋内側グロー */
+body[data-theme='dark'] .calc-cell {
+  font-family: "Share Tech Mono", "JetBrains Mono", monospace;
+  box-shadow: inset 0 0 8px rgba(0, 255, 65, 0.14);
+}
+
+/* CRT 走査線オーバーレイは廃止（横方向の筋に見えるため）。
+   背景は「純黒 ＋ 緑のデジタルレイン」だけにして、余計な縞を一切重ねない。 */
+
+/* =====================================================================
+ * 特別解放テーマ（極光 / 桜吹雪 / インフェルノ / 天空神）の共通オーバーライド。
+ * 3テーマとも「暗背景 × ネオン」系なので、ハードコードされた明るい固定色を
+ * テーマ別トークン（--neon / --panel / --panel-strong / --c-content）で
+ * まとめて変換する。:is() で3テーマを1つのセレクタにまとめている。
+ * （@layer 外＝Tailwind ユーティリティに勝つ。!important で確実に上書き）
+ * ===================================================================== */
+
+/* 明るい淡色背景（-50/-100/-200・白・スレート）→ 暗いパネル */
+body:is([data-theme='aurora'], [data-theme='sakura'], [data-theme='inferno'], [data-theme='tenkuu']) :is(
+  .bg-white,
+  .bg-blue-50, .bg-blue-100, .bg-sky-50, .bg-indigo-50,
+  .bg-emerald-50, .bg-emerald-100, .bg-green-50, .bg-green-100,
+  .bg-teal-50, .bg-cyan-50, .bg-violet-50, .bg-violet-100,
+  .bg-purple-50, .bg-amber-50, .bg-amber-100, .bg-orange-50,
+  .bg-rose-50, .bg-rose-100, .bg-red-50, .bg-pink-50,
+  .bg-slate-50, .bg-slate-100, .bg-slate-200) {
+  background-color: var(--panel) !important;
+  border-color: rgba(var(--neon), 0.35);
+}
+
+/* 濃い原色背景（ボタン・バナー）→ ネオン枠＋発光のパネル */
+body:is([data-theme='aurora'], [data-theme='sakura'], [data-theme='inferno'], [data-theme='tenkuu']) :is(
+  .bg-blue-500, .bg-blue-600, .bg-blue-700, .bg-indigo-500, .bg-indigo-600,
+  .bg-emerald-500, .bg-emerald-600, .bg-green-500, .bg-green-600,
+  .bg-violet-500, .bg-violet-600, .bg-amber-500, .bg-amber-600,
+  .bg-rose-500, .bg-rose-600, .bg-red-500, .bg-slate-800, .bg-slate-900) {
+  background-color: var(--panel-strong) !important;
+  background-image: none !important;
+  border: 1px solid rgba(var(--neon), 0.6);
+  box-shadow: 0 0 16px rgba(var(--neon), 0.35), inset 0 0 14px rgba(var(--neon), 0.12);
+}
+
+/* グラデーション背景 → ネオンのグラデに差し替え */
+body:is([data-theme='aurora'], [data-theme='sakura'], [data-theme='inferno'], [data-theme='tenkuu']) :is(
+  .bg-gradient-to-r, .bg-gradient-to-br, .bg-gradient-to-b, .bg-gradient-to-bl) {
+  background-image: linear-gradient(135deg, var(--panel-strong), rgba(var(--neon), 0.06)) !important;
+  border: 1px solid rgba(var(--neon), 0.55);
+  box-shadow: 0 0 18px rgba(var(--neon), 0.3);
+}
+
+/* 半透明の白タイル（bg-white/20 等）→ ネオンタイル */
+body:is([data-theme='aurora'], [data-theme='sakura'], [data-theme='inferno'], [data-theme='tenkuu']) [class*="bg-white/"] {
+  background-color: rgba(var(--neon), 0.14) !important;
+}
+
+/* 原色テキスト → テーマのコンテンツ色 */
+body:is([data-theme='aurora'], [data-theme='sakura'], [data-theme='inferno'], [data-theme='tenkuu']) :is(
+  .text-blue-500, .text-blue-600, .text-blue-700, .text-blue-800,
+  .text-sky-600, .text-indigo-600, .text-emerald-600, .text-emerald-700,
+  .text-green-600, .text-green-700, .text-teal-600, .text-cyan-600,
+  .text-violet-600, .text-violet-700, .text-purple-600, .text-amber-600,
+  .text-amber-700, .text-amber-800, .text-orange-600, .text-rose-500,
+  .text-rose-600, .text-red-500, .text-red-600, .text-pink-600,
+  .text-slate-600, .text-slate-700, .text-slate-800, .text-slate-900,
+  .text-gray-700, .text-gray-800) {
+  color: var(--c-content) !important;
+}
+
+/* 原色ボーダー → ネオン */
+body:is([data-theme='aurora'], [data-theme='sakura'], [data-theme='inferno'], [data-theme='tenkuu']) :is(
+  .border-blue-100, .border-blue-200, .border-blue-300,
+  .border-amber-100, .border-amber-200, .border-amber-300,
+  .border-emerald-200, .border-emerald-300, .border-violet-200, .border-rose-200,
+  .border-green-200, .border-green-300, .border-slate-200, .border-slate-300) {
+  border-color: rgba(var(--neon), 0.45) !important;
+}
+
+/* リング色 → ネオン */
+body:is([data-theme='aurora'], [data-theme='sakura'], [data-theme='inferno'], [data-theme='tenkuu']) :is(
+  .ring-blue-200, .ring-amber-200, .ring-emerald-200, .ring-violet-200, .ring-rose-200) {
+  --tw-ring-color: rgba(var(--neon), 0.4) !important;
+}
+
+/* 枠線つきカードに薄いネオングロー */
+body:is([data-theme='aurora'], [data-theme='sakura'], [data-theme='inferno'], [data-theme='tenkuu']) :is(.border-line, .border) {
+  box-shadow: 0 0 14px rgba(var(--neon), 0.1), inset 0 0 16px rgba(var(--neon), 0.04);
+}
+
+/* 筆算セルは数字の視認性優先で等幅フォント＋内側グロー */
+body:is([data-theme='aurora'], [data-theme='sakura'], [data-theme='inferno'], [data-theme='tenkuu']) .calc-cell {
+  font-family: "Share Tech Mono", "JetBrains Mono", monospace;
+  box-shadow: inset 0 0 8px rgba(var(--neon), 0.14);
+}
+
+/* 筆算グリッド用（トークン化） */
+.calc-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 0;
+}
+.calc-cell {
+  @apply w-12 h-14 flex items-center justify-center text-2xl font-mono transition-all duration-200;
+  border-color: var(--color-line);
+}
+
+/* 横向き最適化 */
+@media (orientation: landscape) {
+  .simulator-container {
+    height: 100vh;
+  }
+}
+
+.calc-cell-focus {
+  @apply bg-blue-50 ring-2 ring-blue-400 ring-inset;
+}
+.calc-cell-active {
+  @apply border-b-2 border-slate-900;
+}

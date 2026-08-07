@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <title>わり算ランド｜わり算の筆算ラボEX</title>
+    <!-- テーマの FOUC（白フラッシュ）防止 その1:
+         <head> の時点では document.body は未生成（null）なので、ここでは必ず存在する
+         documentElement（<html>）に背景色を即時セットする。これで最初のペイントから
+         白ではなくテーマ色（ダーク=真っ黒）になる。 -->
+    <script>
+      (function () {
+        try {
+          var raw = localStorage.getItem('hissan_settings_v1');
+          var theme = (raw && JSON.parse(raw).state && JSON.parse(raw).state.theme) || 'light';
+          var BG = { light: '#eef2f7', dark: '#000000', aurora: '#020309', sakura: '#0d0416', inferno: '#0a0100', tenkuu: '#041022' };
+          var bg = BG[theme] || '#eef2f7';
+          window.__theme = theme;
+          document.documentElement.style.backgroundColor = bg;
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- FOUC 防止 その2: body 生成後（React 起動前）に data-theme と背景色を同期適用する。
+         React の useEffect 適用より前なので、初回ペイントで正しいテーマになる。 -->
+    <script>
+      (function () {
+        try {
+          var theme = window.__theme || 'light';
+          var BG = { light: '#eef2f7', dark: '#000000', aurora: '#020309', sakura: '#0d0416', inferno: '#0a0100', tenkuu: '#041022' };
+          var bg = BG[theme] || '#eef2f7';
+          document.body.setAttribute('data-theme', theme);
+          document.body.style.backgroundColor = bg;
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
