@@ -88,7 +88,7 @@ export function computeBadges(d: BadgeData): Badge[] {
   // （この時点の list には自分以外の全バッジが入っているので every で判定）
   list.push({
     id: 'god',
-    title: '【わり算】神',
+    title: '【かずのせいしつ】神',
     desc: 'すべての バッジを かくとく',
     icon: 'Crown',
     earned: list.every((b) => b.earned),

@@ -5,7 +5,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import {
   ChevronLeft, Calendar, CheckCircle2, History, Trophy, TrendingUp, Award as AwardIcon,
-  Star, Sparkles, Award, Flame, Crown, Divide, Zap, Compass, CheckCheck, Scale, Search, BookOpen, Lock,
+  Star, Sparkles, Award, Flame, Crown, Hash, Scale, Repeat, GitMerge, Grid3x3, Boxes, Search, Lock,
   ChevronDown, ClipboardCheck, Medal, Target, Rocket, Gem, ShieldCheck,
 } from 'lucide-react';
 import { useProgressStore, ModuleId } from '../store/progressStore';
@@ -15,7 +15,7 @@ import { computeBadges } from '../lib/badges';
 interface Props { onBack: () => void; }
 
 const ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
-  Star, Sparkles, Award, Trophy, Flame, Crown, Divide, Zap, Compass, CheckCheck, Scale, Search, BookOpen,
+  Star, Sparkles, Award, Trophy, Flame, Crown, Hash, Scale, Repeat, GitMerge, Grid3x3, Boxes, Search,
   Medal, Target, Rocket, Gem, ClipboardCheck, ShieldCheck,
 };
 
@@ -99,7 +99,7 @@ export const LogView: React.FC<Props> = ({ onBack }) => {
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {MODULES.map((m) => {
-                const Icon = ICONS[m.icon] ?? Divide;
+                const Icon = ICONS[m.icon] ?? Hash;
                 return (
                   <div key={m.id} className="bg-surface rounded-2xl border border-line shadow-sm p-4 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-surface-2 text-muted flex items-center justify-center shrink-0"><Icon size={20} /></div>

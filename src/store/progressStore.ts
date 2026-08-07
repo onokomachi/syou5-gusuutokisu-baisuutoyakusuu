@@ -8,12 +8,12 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { getProgressStorage } from '../services/progressRepository';
 
 export type ModuleId =
-  | 'hissan'
-  | 'mental'
-  | 'rules'
-  | 'estimate'
-  | 'check'
-  | 'word-problem'
+  | 'even-odd'
+  | 'even-odd-rule'
+  | 'multiples'
+  | 'lcm'
+  | 'divisors'
+  | 'gcd'
   | 'error-hunter'
   | 'mock-test';
 
@@ -60,13 +60,13 @@ export interface SkillMastery {
 /** skillId のプレフィックスから所属モジュールを判定 */
 export function skillToModuleId(skillId: string): ModuleId | null {
   if (skillId === 'mock-test' || skillId.startsWith('mock-')) return 'mock-test';
-  if (skillId.startsWith('hissan-')) return 'hissan';
-  if (skillId.startsWith('mental-')) return 'mental';
-  if (skillId.startsWith('rules-')) return 'rules';
-  if (skillId.startsWith('est-')) return 'estimate';
-  if (skillId.startsWith('check-')) return 'check';
-  if (skillId.startsWith('wp-') || skillId.startsWith('word-')) return 'word-problem';
-  if (skillId.startsWith('eh-') || skillId.startsWith('fix-') || skillId.startsWith('judge-')) return 'error-hunter';
+  if (skillId.startsWith('eor-')) return 'even-odd-rule';
+  if (skillId.startsWith('eo-')) return 'even-odd';
+  if (skillId.startsWith('mul-')) return 'multiples';
+  if (skillId.startsWith('lcm-')) return 'lcm';
+  if (skillId.startsWith('div-')) return 'divisors';
+  if (skillId.startsWith('gcd-')) return 'gcd';
+  if (skillId.startsWith('eh-')) return 'error-hunter';
   return null;
 }
 
@@ -209,7 +209,7 @@ export const useProgressStore = create<ProgressState>()(
       }),
     }),
     {
-      name: 'hissan_progress_v4',
+      name: 'suusei_progress_v1',
       version: 2,
       storage: createJSONStorage(() => getProgressStorage()),
       // v1→v2: 満点回数カウンタを新設。旧データには存在しないため 0 で補う
