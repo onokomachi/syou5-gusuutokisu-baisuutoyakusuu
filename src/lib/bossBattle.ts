@@ -82,13 +82,22 @@ function weightedPick<T>(items: { item: T; weight: number }[]): T {
   return items[items.length - 1].item;
 }
 
-/** 問題の回答形式ごとの「素の」制限時間（秒）。判定・選択は短め、複数選択・数値入力は長めに。 */
+/**
+ * 問題の回答形式ごとの「素の」制限時間（秒）。
+ * 判定・選択は短め、書き出し・多段階・ベン図など 手を動かす量が多い形式は
+ * 時間切れが多発しないよう 大きめに配分する。
+ */
 function baseSeconds(p: Problem): number {
   switch (p.kind) {
     case 'judge': return 12;
     case 'choice': return 16;
     case 'numeric': return 20;
     case 'multi': return 26;
+    case 'sequence': return 34;
+    case 'list': return p.listExact ? 38 : 48; // 「ぜんぶ書く」は個数が多いぶん長く
+    case 'steps': return 45;
+    case 'venn': return 55;
+    case 'pairs': return 60;
   }
 }
 

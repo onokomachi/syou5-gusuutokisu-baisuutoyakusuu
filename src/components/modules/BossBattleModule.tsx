@@ -481,6 +481,7 @@ export const BossBattleModule: React.FC<Props> = ({ onExit }) => {
                         onNext={() => {}}
                         onResult={() => handleCorrect()}
                         nextLabel="つぎへ"
+                        scaffold="none"
                       />
                     )}
                   </div>
