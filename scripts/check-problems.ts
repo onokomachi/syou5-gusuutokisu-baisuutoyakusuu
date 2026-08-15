@@ -175,10 +175,12 @@ for (const lv of EOR_LEVELS) {
       }
     }
     if (lv.id === 'eor-blank') {
-      const m = p.label.match(/^□\+(ぐうすう|きすう)=(ぐうすう|きすう)$/);
+      const m = p.label.match(/^□\+(\d+)=(\d+)$/);
       assert(!!m, `eor-blank label: ${p.label}`);
       if (m) {
-        const needEven = (m[1] === 'きすう') === (m[2] === 'きすう');
+        const [given, target] = [Number(m[1]), Number(m[2])];
+        assert(target > given, `eor-blank target must exceed given: ${p.label}`);
+        const needEven = (given % 2 === 0) === (target % 2 === 0);
         assert(p.answerIndex === (needEven ? 0 : 1), `eor-blank logic: ${p.label}`);
       }
     }
@@ -487,6 +489,68 @@ for (let i = 0; i < 200; i++) {
     const p = s.gen();
     checkStructure(p, `test:${s.level}`);
   });
+}
+
+/* ---------- 反復学習の妥当性: くり返し解いても すぐ答えを覚えないだけの variety があるか ----------
+ * このアプリは同じレベルを何度も くり返し解く前提なので、バリエーションが少ない
+ * レベルがあると、児童が理解ではなく「パターン」を暗記してしまう。
+ * 各レベルを大量に生成し、label（きろく表示用の要約＝実質的な出題内容の指紋）の
+ * 種類数を数えて、最低ラインを下回っていないか確認する。 */
+function distinctCount(gen: () => string, samples = 500): number {
+  const set = new Set<string>();
+  for (let i = 0; i < samples; i++) set.add(gen());
+  return set.size;
+}
+
+const VARIETY_MIN = 15;
+const varietyChecks: { name: string; gen: () => string }[] = [
+  { name: 'eo-basic', gen: () => generateEvenOdd('eo-basic').label },
+  { name: 'eo-big', gen: () => generateEvenOdd('eo-big').label },
+  { name: 'eo-zero', gen: () => generateEvenOdd('eo-zero').label },
+  { name: 'eo-seq', gen: () => generateEvenOdd('eo-seq').label },
+  { name: 'eo-expr', gen: () => generateEvenOdd('eo-expr').label },
+  { name: 'eor-add', gen: () => generateEor('eor-add').label },
+  { name: 'eor-mul', gen: () => generateEor('eor-mul').label },
+  { name: 'eor-blank', gen: () => generateEor('eor-blank').label },
+  { name: 'eor-trap', gen: () => generateEor('eor-trap').label },
+  { name: 'eor-why', gen: () => generateEor('eor-why').label },
+  { name: 'mul-basic', gen: () => generateMultiples('mul-basic').label },
+  { name: 'mul-list', gen: () => generateMultiples('mul-list').label },
+  { name: 'mul-judge', gen: () => generateMultiples('mul-judge').label },
+  { name: 'mul-pick', gen: () => generateMultiples('mul-pick').label },
+  { name: 'mul-count', gen: () => generateMultiples('mul-count').label },
+  { name: 'lcm-find', gen: () => generateLcm('lcm-find').label },
+  { name: 'lcm-list', gen: () => generateLcm('lcm-list').label },
+  { name: 'lcm-pick', gen: () => generateLcm('lcm-pick').label },
+  { name: 'lcm-word', gen: () => generateLcm('lcm-word').label },
+  { name: 'lcm-tile', gen: () => generateLcm('lcm-tile').label },
+  { name: 'lcm-three', gen: () => generateLcm('lcm-three').label },
+  { name: 'lcm-fraction', gen: () => generateLcm('lcm-fraction').label },
+  { name: 'div-judge', gen: () => generateDivisors('div-judge').label },
+  { name: 'div-pick', gen: () => generateDivisors('div-pick').label },
+  { name: 'div-all', gen: () => generateDivisors('div-all').label },
+  { name: 'div-pairs', gen: () => generateDivisors('div-pairs').label },
+  { name: 'div-list', gen: () => generateDivisors('div-list').label },
+  { name: 'div-count', gen: () => generateDivisors('div-count').label },
+  { name: 'gcd-find', gen: () => generateGcd('gcd-find').label },
+  { name: 'gcd-venn', gen: () => generateGcd('gcd-venn').label },
+  { name: 'gcd-pick', gen: () => generateGcd('gcd-pick').label },
+  { name: 'gcd-word', gen: () => generateGcd('gcd-word').label },
+  { name: 'gcd-cut', gen: () => generateGcd('gcd-cut').label },
+  { name: 'gcd-three', gen: () => generateGcd('gcd-three').label },
+  { name: 'gcd-prime', gen: () => generateGcd('gcd-prime').label },
+  { name: 'gcd-fraction', gen: () => generateGcd('gcd-fraction').label },
+  // eh-zero / eh-one-prime は対象外: 0・1という特定の数そのものが誤解の対象なので、
+  // 数値をふって問題を増やすことができない（generateNumError 内のコメント参照）。
+  { name: 'eh-self', gen: () => makeNumError('eh-self').statement },
+  { name: 'eh-one-div', gen: () => makeNumError('eh-one-div').statement },
+  { name: 'eh-swap', gen: () => makeNumError('eh-swap').statement },
+  { name: 'eh-skip', gen: () => makeNumError('eh-skip').statement },
+  { name: 'eh-oddodd', gen: () => makeNumError('eh-oddodd').statement },
+];
+for (const vc of varietyChecks) {
+  const n = distinctCount(vc.gen);
+  assert(n >= VARIETY_MIN, `variety: ${vc.name} has only ${n} distinct problems in 500 samples (want >= ${VARIETY_MIN})`);
 }
 
 console.log(failures === 0 ? '全プロパティテスト OK（失敗 0件）' : `失敗 ${failures} 件`);

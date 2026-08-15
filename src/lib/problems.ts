@@ -263,6 +263,15 @@ const EO_ZERO_STATEMENTS = [
   { text: 'ぐうすうとは、2で わりきれる数のことである', isTrue: true, explain: 'その通り！ぐうすうは 2で ぴったり わりきれる数だよ。' },
   { text: '0は ぐうすうでも きすうでもない、とくべつな数である', isTrue: false, explain: '0も ぐうすうの なかまだよ（2で わりきれるから）。' },
   { text: '十の位や 百の位を 見なくても、一の位だけで ぐうすう・きすうが わかる', isTrue: true, explain: 'その通り。一の位だけで 判定できるよ。' },
+  { text: '一の位が 8の数は、いつも ぐうすうである', isTrue: true, explain: '一の位が 0,2,4,6,8のときは いつも ぐうすうだよ。' },
+  { text: '99は ぐうすうである', isTrue: false, explain: '99の 一の位は 9だから、きすうだよ。' },
+  { text: '100は ぐうすうである', isTrue: true, explain: '100の 一の位は 0だから、ぐうすうだよ。' },
+  { text: 'きすうは、いつも 1で おわる', isTrue: false, explain: 'きすうは 一の位が 1,3,5,7,9の どれかだよ。1だけとは かぎらないね。' },
+  { text: 'ぐうすうを 2で わると、いつも 整数に なる', isTrue: true, explain: 'ぐうすうは 2で ぴったり わりきれる数だから、2で わっても あまりが 出ないよ。' },
+  { text: 'きすうを 2で わると、いつも 整数に なる', isTrue: false, explain: 'きすうを 2で わると、いつも 1 あまるよ。' },
+  { text: 'いちばん小さい ぐうすうは 2である', isTrue: false, explain: '0も ぐうすうだから、いちばん小さい ぐうすうは 0だよ。' },
+  { text: '3けたの数は、ぜんぶ きすうである', isTrue: false, explain: '3けたの数にも ぐうすうは あるよ。たとえば 100や 246。' },
+  { text: 'となりあう 2つの整数は、かならず 一方が ぐうすう、もう一方が きすうに なる', isTrue: true, explain: 'その通り。ぐうすうと きすうは 1つおきに あらわれるよ（たとえば 6と7、7と8）。' },
 ];
 
 export function generateEvenOdd(level: EvenOddLevel): Problem {
@@ -372,6 +381,15 @@ const EOR_TRAPS = [
   { text: 'きすうを 2つ たすと、答えは いつも ぐうすうに なる', isTrue: true, explain: 'その通り！きすう＋きすう＝ぐうすう だよ。' },
   { text: '大きい数どうしの たし算なら、答えは いつも ぐうすうに なる', isTrue: false, explain: '大きさは 関係ないよ。101+3=104(ぐうすう)だけど 101+2=103(きすう)。ぐうすう・きすうの 組み合わせで決まるんだ。' },
   { text: '0は ぐうすうなので、0を たしても ぐうすう・きすうは かわらない', isTrue: true, explain: 'その通り！0は ぐうすうだから、たしても 種類は かわらないよ。' },
+  { text: 'ぐうすう × ぐうすうは、ぐうすうに なる', isTrue: true, explain: 'たとえば 4×6=24。ぐうすうどうしの かけ算は いつも ぐうすうだよ。' },
+  { text: 'きすう × きすうは、きすうに なる', isTrue: true, explain: 'たとえば 3×5=15。きすうどうしの かけ算は いつも きすうに なるよ。' },
+  { text: 'ぐうすう × きすうは、きすうに なる', isTrue: false, explain: 'たとえば 4×3=12(ぐうすう)。ぐうすうが 1つでも まざると、答えは いつも ぐうすうに なるよ。' },
+  { text: 'きすうを 3つ たすと、答えは いつも ぐうすうに なる', isTrue: false, explain: 'たとえば 3+5+7=15(きすう)。きすうを 3つ たすと きすうに なるよ（2つのときと ちがうよ）。' },
+  { text: 'ぐうすう どうしの ひき算は、いつも ぐうすうに なる', isTrue: true, explain: 'たとえば 8－4＝4。ぐうすう－ぐうすうは いつも ぐうすうだよ。' },
+  { text: 'きすう どうしの ひき算は、いつも きすうに なる', isTrue: false, explain: 'たとえば 7－3＝4(ぐうすう)。きすう－きすうは いつも ぐうすうに なるよ。' },
+  { text: 'ぐうすうから きすうを ひくと、答えは いつも きすうに なる', isTrue: true, explain: 'たとえば 8－3＝5。ぐうすう－きすうは いつも きすうに なるよ。' },
+  { text: 'どんな整数を 2倍しても、答えは いつも ぐうすうに なる', isTrue: true, explain: 'たとえば 7×2＝14。整数×2は 2×（何か）の形になるから、いつも ぐうすうだよ。' },
+  { text: 'ぐうすうを 3つ たすと、答えは いつも ぐうすうに なる', isTrue: true, explain: 'たとえば 4+6+8=18(ぐうすう)。ぐうすうは 何こ たしても ぐうすうに なるよ。' },
 ];
 
 /** 「なぜそうなるか」を、記述させずに 説明の並べかえで扱う。 */
@@ -416,6 +434,116 @@ const EOR_WHY_VARIANTS: { claim: string; steps: string[]; example: string }[] = 
     ],
     example: '3＋4＝7、9＋6＝15',
   },
+  {
+    claim: 'きすう × きすう ＝ きすう',
+    steps: [
+      'きすうは 2×□＋1、2×△＋1 と 書ける',
+      'かけると (2×□＋1) × (2×△＋1)',
+      'ひらくと 2×(2×□×△＋□＋△) ＋ 1 に なる',
+      'だから 2で わると 1 あまる ＝ きすう',
+    ],
+    example: '3×5＝15、7×9＝63',
+  },
+  {
+    claim: 'ぐうすう － ぐうすう ＝ ぐうすう',
+    steps: [
+      'ぐうすうは 2×□、2×△ と 書ける',
+      'ひくと 2×□ － 2×△',
+      'まとめると 2×(□－△) に なる',
+      'だから 2で わりきれる ＝ ぐうすう',
+    ],
+    example: '8－4＝4、10－6＝4',
+  },
+  {
+    claim: 'ぐうすう － きすう ＝ きすう',
+    steps: [
+      'ぐうすうは 2×□、きすうは 2×△＋1 と 書ける',
+      'ひくと 2×□ － (2×△＋1)',
+      'まとめると 2×(□－△－1) ＋ 1 に なる',
+      'だから 2で わると 1 あまる ＝ きすう',
+    ],
+    example: '8－3＝5、10－7＝3',
+  },
+  {
+    claim: 'どんな整数を 2倍しても ＝ ぐうすう',
+    steps: [
+      'どんな整数も □ と 書ける',
+      '2倍すると 2×□',
+      'これは もう「2×なにか」の 形に なっている',
+      'だから 2で わりきれる ＝ ぐうすう',
+    ],
+    example: '7×2＝14、13×2＝26',
+  },
+  {
+    claim: 'きすう － きすう ＝ ぐうすう',
+    steps: [
+      'きすうは 2×□＋1、2×△＋1 と 書ける',
+      'ひくと (2×□＋1) － (2×△＋1)',
+      'まとめると 2×(□－△) に なる',
+      'だから 2で わりきれる ＝ ぐうすう',
+    ],
+    example: '7－3＝4、9－5＝4',
+  },
+  {
+    claim: 'きすう － ぐうすう ＝ きすう',
+    steps: [
+      'きすうは 2×□＋1、ぐうすうは 2×△ と 書ける',
+      'ひくと (2×□＋1) － 2×△',
+      'まとめると 2×(□－△) ＋ 1 に なる',
+      'だから 2で わると 1 あまる ＝ きすう',
+    ],
+    example: '7－4＝3、9－2＝7',
+  },
+  {
+    claim: 'となりあう 2つの整数の 和 ＝ きすう',
+    steps: [
+      'となりあう 2つの整数は、一方が ぐうすう(2×□)、もう一方が きすう(2×□＋1) と 書ける',
+      'たすと 2×□ ＋ (2×□＋1)',
+      'まとめると 2×(2×□) ＋ 1 に なる',
+      'だから 2で わると 1 あまる ＝ きすう',
+    ],
+    example: '4＋5＝9、7＋8＝15',
+  },
+  {
+    claim: 'きすうを 3つ たすと ＝ きすう',
+    steps: [
+      '3つの きすうは 2×□＋1、2×△＋1、2×☆＋1 と 書ける',
+      'たすと (2×□＋1)＋(2×△＋1)＋(2×☆＋1)',
+      'まとめると 2×(□＋△＋☆＋1) ＋ 1 に なる',
+      'だから 2で わると 1 あまる ＝ きすう',
+    ],
+    example: '1＋3＋5＝9、3＋5＋7＝15',
+  },
+  {
+    claim: 'ぐうすうを 3つ たすと ＝ ぐうすう',
+    steps: [
+      '3つの ぐうすうは 2×□、2×△、2×☆ と 書ける',
+      'たすと 2×□ ＋ 2×△ ＋ 2×☆',
+      'まとめると 2×(□＋△＋☆) に なる',
+      'だから 2で わりきれる ＝ ぐうすう',
+    ],
+    example: '4＋6＋8＝18、2＋4＋10＝16',
+  },
+  {
+    claim: 'ぐうすう × ぐうすう ＝ かならず 4の倍数',
+    steps: [
+      'ぐうすうは 2×□、2×△ と 書ける',
+      'かけると 2×□ × 2×△',
+      'まとめると 4×(□×△) に なる',
+      'だから 4で わりきれる ＝ 4の倍数',
+    ],
+    example: '4×6＝24(4の倍数)、8×10＝80(4の倍数)',
+  },
+  {
+    claim: 'きすう × ぐうすう ＝ ぐうすう',
+    steps: [
+      'きすうは 2×□＋1、ぐうすうは 2×△ と 書ける',
+      'かけると (2×□＋1) × 2×△',
+      'これは もう「2×なにか」の 形に なっている',
+      'だから 2で わりきれる ＝ ぐうすう',
+    ],
+    example: '3×4＝12、5×6＝30',
+  },
 ];
 
 export function generateEor(level: EorLevel): Problem {
@@ -452,19 +580,25 @@ export function generateEor(level: EorLevel): Problem {
       };
     }
     case 'eor-blank': {
-      const targetEven = Math.random() < 0.5;
-      const givenEven = Math.random() < 0.5;
+      // 抽象的な「ぐうすうの数／きすうの数」という2値だけだと、組み合わせが4通りしかなく
+      // すぐに答えを覚えられてしまう。実際の数で出題し、見た目のバリエーションを増やす
+      // （「たされる数・たす数の偶奇の組み合わせで和の偶奇が決まる」という抽象的な推論を、
+      // 実際の数で確かめさせる。□の値そのものを求めさせるわけではない）。
+      const given = rnd(2, 60);
+      const target = given + rnd(2, 40);
+      const givenEven = given % 2 === 0;
+      const targetEven = target % 2 === 0;
       const isOddGiven = !givenEven;
       const isOddTarget = !targetEven;
       const isOddNeed = isOddTarget !== isOddGiven;
       const needEven = !isOddNeed;
       return {
         kind: 'choice',
-        prompt: `□ ＋ ${givenEven ? 'ぐうすうの数' : 'きすうの数'} ＝ ${targetEven ? 'ぐうすうの数' : 'きすうの数'} に なるとき、□に あてはまるのは？`,
-        choices: ['ぐうすうの数', 'きすうの数'], answerIndex: needEven ? 0 : 1,
-        hint: 'たされる数と たす数の 組み合わせで、和が ぐうすうか きすうかが 決まるよ。ぐうすう・きすうの 組み合わせを 1つずつ ためしてみよう。',
-        explain: `□が ${needEven ? 'ぐうすう' : 'きすう'}のとき、${needEven ? 'ぐうすう' : 'きすう'}＋${givenEven ? 'ぐうすう' : 'きすう'}＝${targetEven ? 'ぐうすう' : 'きすう'}に なるよ。`,
-        label: `□+${givenEven ? 'ぐうすう' : 'きすう'}=${targetEven ? 'ぐうすう' : 'きすう'}`,
+        prompt: `□ ＋ ${given} ＝ ${target} に なるとき、□は ぐうすう？ きすう？`,
+        choices: ['ぐうすう', 'きすう'], answerIndex: needEven ? 0 : 1,
+        hint: `${given}は ${givenEven ? 'ぐうすう' : 'きすう'}、${target}は ${targetEven ? 'ぐうすう' : 'きすう'}だね。たされる数と たす数の 組み合わせで、和の しゅるいが 決まるよ。`,
+        explain: `□が ${needEven ? 'ぐうすう' : 'きすう'}のとき、${needEven ? 'ぐうすう' : 'きすう'}＋${givenEven ? 'ぐうすう' : 'きすう'}＝${targetEven ? 'ぐうすう' : 'きすう'}に なるよ。（${given}は${givenEven ? 'ぐうすう' : 'きすう'}、${target}は${targetEven ? 'ぐうすう' : 'きすう'}）`,
+        label: `□+${given}=${target}`,
       };
     }
     case 'eor-trap': {
@@ -552,19 +686,22 @@ export function generateMultiples(level: MultiplesLevel): Problem {
       };
     }
     case 'mul-pick': {
-      const b = rnd(2, 9);
+      const b = rnd(2, 12);
       const upper = b * 12;
       const multiplesPool = Array.from({ length: 10 }, (_, i) => b * (i + 2)).filter((x) => x <= upper);
       const chosen = shuffle(multiplesPool).slice(0, Math.min(multiplesPool.length, rnd(3, 5)));
       const decoys = collectUpTo(8 - chosen.length, () => nonMultipleOf(b, b + 1, upper));
       const candidates = shuffle([...chosen, ...decoys]);
       const answerIndices = candidates.map((c, i) => ({ c, i })).filter((x) => x.c % b === 0).map((x) => x.i);
+      const answerNums = answerIndices.map((i) => candidates[i]);
       return {
         kind: 'multi', prompt: `この中から ${b}の倍数を ぜんぶ えらぼう。`,
         choices: candidates.map(String), answerIndices,
         hint: `それぞれの数を ${b} で わって、わりきれるか たしかめよう。`,
-        explain: `${b}の倍数は ${answerIndices.map((i) => candidates[i]).join('、 ')}。`,
-        label: `${b}の倍数えらび`,
+        explain: `${b}の倍数は ${answerNums.join('、 ')}。`,
+        // ラベルに正解の組み合わせも含める（学習のきろくで「何を選ぶ問題だったか」が分かるように、
+        // また b だけだと 2〜12 の11通りしかなく すぐ覚えてしまうのを防ぐため）。
+        label: `${b}の倍数えらび(${answerNums.join(',')})`,
       };
     }
     case 'mul-count': {
@@ -823,7 +960,7 @@ export function generateDivisors(level: DivisorsLevel): Problem {
       };
     }
     case 'div-all': {
-      const N = rnd(12, 24);
+      const N = rnd(12, 30);
       const divs = divisorsOf(N);
       const candidates = Array.from({ length: N }, (_, i) => i + 1);
       const answerIndices = candidates.map((c, i) => ({ c, i })).filter((x) => N % x.c === 0).map((x) => x.i);
@@ -838,7 +975,7 @@ export function generateDivisors(level: DivisorsLevel): Problem {
     case 'div-pairs': {
       // 約数の見落としを防ぐ核心技能（1×N, 2×…, とペアで探す）を、
       // ヒント文で言うだけでなく UI の手続きそのものとして指導する。
-      const N = pick([12, 16, 18, 20, 24, 28, 30, 32, 36, 40, 42, 45, 48, 50, 54, 56, 60, 64]);
+      const N = pick([12, 14, 15, 16, 18, 20, 22, 24, 25, 27, 28, 30, 32, 36, 40, 42, 44, 45, 48, 50, 54, 56, 60, 64]);
       const divs = divisorsOf(N);
       return {
         kind: 'pairs',
@@ -1114,10 +1251,18 @@ function buildEhReasons(correct: string): { options: string[]; index: number } {
 
 type EhBuilder = () => NumError;
 
+// 0の偶奇の誤解は「0という特定の数」そのものが対象のため、数値をふって
+// 問題を増やすことができない。言い回しだけ数パターン用意して単調さをやわらげる。
+const EH_ZERO_STATEMENTS = [
+  '0は きすうです。',
+  '0は ぐうすうでも きすうでもない、とくべつな数です。',
+  '0を 2で わると 1あまるので、きすうです。',
+];
+
 const ehZero: EhBuilder = () => {
   const r = buildEhReasons(EH_REASONS.ZERO);
   return {
-    character: pick(EH_CHARS), statement: '0は きすうです。', isCorrect: false,
+    character: pick(EH_CHARS), statement: pick(EH_ZERO_STATEMENTS), isCorrect: false,
     fixKind: 'choice2', choice2Labels: ['ぐうすう', 'きすう'], correctChoiceIsFirst: true, fixPrompt: '0は 本当は？',
     reasonOptions: r.options, correctReasonIndex: r.index,
     fixHint: '0 ÷ 2 は わりきれるかな？',
@@ -1125,10 +1270,16 @@ const ehZero: EhBuilder = () => {
   };
 };
 
+// 1が素数でない理由も「1という特定の数」そのものが対象のため、同様に言い回しのみ増やす。
+const EH_ONE_PRIME_STATEMENTS = [
+  '1は 素数(そすう)です。',
+  '1の 約数は 1と 1自身だから、素数(そすう)です。',
+];
+
 const ehOnePrime: EhBuilder = () => {
   const r = buildEhReasons(EH_REASONS.ONE_PRIME);
   return {
-    character: pick(EH_CHARS), statement: '1は 素数(そすう)です。', isCorrect: false,
+    character: pick(EH_CHARS), statement: pick(EH_ONE_PRIME_STATEMENTS), isCorrect: false,
     fixKind: 'choice2', choice2Labels: ['素数である', '素数でない'], correctChoiceIsFirst: false, fixPrompt: '1は 本当は？',
     reasonOptions: r.options, correctReasonIndex: r.index,
     fixHint: '1の約数を 書き出してみよう。いくつ あるかな？',
