@@ -30,6 +30,7 @@ export const LogView: React.FC<Props> = ({ onBack }) => {
   const bestTestTotal = useProgressStore((s) => s.bestTestTotal);
   const testPerfectCounts = useProgressStore((s) => s.testPerfectCounts);
   const masteredModulesAll = useProgressStore((s) => s.masteredModules);
+  const debugAllBadges = useProgressStore((s) => s.debugAllBadges);
   const [scope, setScope] = React.useState<'all' | 'today'>('all');
   const [expandedId, setExpandedId] = React.useState<string | null>(null);
 
@@ -49,7 +50,7 @@ export const LogView: React.FC<Props> = ({ onBack }) => {
 
   const masteredModules: Record<string, boolean> = {};
   MODULES.forEach((m) => (masteredModules[m.id] = !!masteredModulesAll[m.id]));
-  const badges = computeBadges({ totalCorrect, maxStreak, moduleCounts, bestTestOmote, bestTestUra, bestTestTotal, testPerfectCounts, masteredModules });
+  const badges = computeBadges({ totalCorrect, maxStreak, moduleCounts, bestTestOmote, bestTestUra, bestTestTotal, testPerfectCounts, masteredModules, debugAllBadges });
   const earnedCount = badges.filter((b) => b.earned).length;
 
   const moduleTitle = (id: ModuleId) => MODULES.find((m) => m.id === id)?.title ?? (id === 'mock-test' ? 'テスト' : id === 'boss-battle' ? 'ボス戦' : id);

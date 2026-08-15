@@ -6,10 +6,8 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { X, Sun, Flower2, Terminal, Flame, Sparkles, Cloud, Lock, Music, Music2 } from 'lucide-react';
 import { useSettingsStore, Theme, FontScale } from '../store/settingsStore';
-import { useProgressStore } from '../store/progressStore';
-import { MODULES } from '../constants';
-import { badgeRatio } from '../lib/badges';
 import { THEME_UNLOCK, isThemeUnlocked } from '../lib/themeUnlock';
+import { useBadgeRatio } from '../lib/useBadgeRatio';
 
 interface Props {
   onClose: () => void;
@@ -34,19 +32,7 @@ export const Settings: React.FC<Props> = ({ onClose }) => {
   const { theme, fontScale, soundEnabled, setTheme, setFontScale, toggleSound } = useSettingsStore();
 
   // バッジ獲得率（特別テーマの解放判定に使う）
-  const totalCorrect = useProgressStore((s) => s.totalCorrect);
-  const maxStreak = useProgressStore((s) => s.maxStreak);
-  const moduleCountsAll = useProgressStore((s) => s.moduleCounts);
-  const bestTestOmote = useProgressStore((s) => s.bestTestOmote);
-  const bestTestUra = useProgressStore((s) => s.bestTestUra);
-  const bestTestTotal = useProgressStore((s) => s.bestTestTotal);
-  const testPerfectCounts = useProgressStore((s) => s.testPerfectCounts);
-  const masteredModulesAll = useProgressStore((s) => s.masteredModules);
-  const moduleCounts: Record<string, number> = {};
-  MODULES.forEach((m) => (moduleCounts[m.id] = moduleCountsAll[m.id] ?? 0));
-  const masteredModules: Record<string, boolean> = {};
-  MODULES.forEach((m) => (masteredModules[m.id] = !!masteredModulesAll[m.id]));
-  const ratio = badgeRatio({ totalCorrect, maxStreak, moduleCounts, bestTestOmote, bestTestUra, bestTestTotal, testPerfectCounts, masteredModules });
+  const ratio = useBadgeRatio();
 
   // 選択中ボタンの強調はテーマ追従（brand 色＋surface-3）にして、
   // ダーク（マトリックス）でも文字が暗くならず読みやすいようにする。

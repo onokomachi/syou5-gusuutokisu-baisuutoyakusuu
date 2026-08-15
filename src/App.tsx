@@ -16,6 +16,7 @@ import { ErrorHunterModule } from './components/modules/ErrorHunterModule';
 import { MockTestModule } from './components/modules/MockTestModule';
 import { BossBattleModule } from './components/modules/BossBattleModule';
 import { LogView } from './components/LogView';
+import { DebugUnlock } from './components/DebugUnlock';
 import { ModuleId } from './store/progressStore';
 import { useApplySettings } from './lib/useApplySettings';
 import { useSettingsStore } from './store/settingsStore';
@@ -110,10 +111,8 @@ export default function App() {
         </div>
       )}
 
-      {/* 画面左下のクレジット表記（ごく小さく） */}
-      <div className="fixed bottom-1 left-2 z-50 pointer-events-none text-[10px] leading-none text-faint/60 select-none">
-        presented by onokomachi
-      </div>
+      {/* 画面左下のクレジット表記（ごく小さく。3回タップで隠しコマンド） */}
+      <DebugUnlock />
     </div>
   );
 }

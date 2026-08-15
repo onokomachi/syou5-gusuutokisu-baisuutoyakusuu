@@ -89,6 +89,8 @@ interface ProgressState {
   testPerfectCounts: { omote: number; ura: number; total: number };
   // 習熟度MAX（あるスキルで5問連続ノーミス＝熟達バー満タン）を一度でも達成したモジュール。
   masteredModules: Partial<Record<ModuleId, boolean>>;
+  // 隠しコマンドで解放した「全バッジ獲得あつかい」フラグ（見た目の確認用。実際の記録は書き換えない）
+  debugAllBadges: boolean;
   recordResult: (rec: Omit<ResultRecord, 'id' | 'ts'>) => void;
   getMastery: (skillId: string) => number; // 0..1（試行なしは 0）
   getMasteryStreak: (skillId: string) => number; // 0..1（連続ノーミス/5。熟達バー表示用）
@@ -96,6 +98,7 @@ interface ProgressState {
   getTodayCount: () => number; // きょう 正解した数
   getTodaySkillCount: (skillId: string) => number; // きょう そのスキルを 正解した数
   setDailyGoal: (n: number) => void;
+  setDebugAllBadges: (v: boolean) => void;
   reset: () => void;
 }
 
@@ -114,6 +117,7 @@ export const useProgressStore = create<ProgressState>()(
       bestTestTotal: 0,
       testPerfectCounts: { omote: 0, ura: 0, total: 0 },
       masteredModules: {},
+      debugAllBadges: false,
 
       recordResult: (rec) => {
         set((state) => {
@@ -204,10 +208,12 @@ export const useProgressStore = create<ProgressState>()(
       },
 
       setDailyGoal: (n) => set({ dailyGoal: n }),
+      setDebugAllBadges: (v) => set({ debugAllBadges: v }),
 
       reset: () => set({
         logs: [], mastery: {}, currentStreak: 0, maxStreak: 0, totalCorrect: 0, moduleCounts: {},
         bestTestOmote: 0, bestTestUra: 0, bestTestTotal: 0, testPerfectCounts: { omote: 0, ura: 0, total: 0 }, masteredModules: {},
+        debugAllBadges: false,
       }),
     }),
     {
