@@ -6,18 +6,21 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Hash, Scale, Repeat, GitMerge, Grid3x3, Boxes, Search,
-  History, Settings as SettingsIcon, Lock, ClipboardCheck, ChevronRight, Flame,
+  History, Settings as SettingsIcon, Lock, ClipboardCheck, ChevronRight, Flame, Swords,
 } from 'lucide-react';
 import { MODULES, ModuleMeta } from '../constants';
 import { ModuleId, useProgressStore } from '../store/progressStore';
 import { Settings } from './Settings';
 import { GoalRing } from './ui/GoalRing';
 import { getReviewTargets } from '../lib/review';
+import { useBadgeRatio } from '../lib/useBadgeRatio';
+import { THEME_UNLOCK, isThemeUnlocked } from '../lib/themeUnlock';
 
 interface Props {
   onSelectModule: (id: ModuleId) => void;
   onOpenLog: () => void;
   onStartTest: () => void;
+  onStartBoss: () => void;
 }
 
 const ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
@@ -73,12 +76,14 @@ const ModuleCard: React.FC<{ m: ModuleMeta; onClick: () => void; cleared: number
   );
 };
 
-export const Hub: React.FC<Props> = ({ onSelectModule, onOpenLog, onStartTest }) => {
+export const Hub: React.FC<Props> = ({ onSelectModule, onOpenLog, onStartTest, onStartBoss }) => {
   const [showSettings, setShowSettings] = useState(false);
   const getModuleCount = useProgressStore((s) => s.getModuleCount);
   const mastery = useProgressStore((s) => s.mastery);
   const currentStreak = useProgressStore((s) => s.currentStreak);
   const reviewTargets = getReviewTargets(mastery);
+  const badgeRatioValue = useBadgeRatio();
+  const bossUnlocked = isThemeUnlocked('inferno', badgeRatioValue);
 
   return (
     <div className="w-full h-full overflow-y-auto">
@@ -172,6 +177,29 @@ export const Hub: React.FC<Props> = ({ onSelectModule, onOpenLog, onStartTest })
             />
           ))}
         </div>
+
+        {/* ボス戦（インフェルノ以上で解放されるスペシャルステージ。あえて一番下に置く） */}
+        <motion.button
+          whileHover={bossUnlocked ? { y: -3 } : undefined}
+          whileTap={bossUnlocked ? { scale: 0.99 } : undefined}
+          onClick={() => bossUnlocked && onStartBoss()}
+          className={`w-full mt-6 p-5 rounded-[24px] text-left transition-all flex items-center gap-4 ${
+            bossUnlocked
+              ? 'bg-gradient-to-r from-indigo-600 to-cyan-600 text-white shadow-lg hover:shadow-xl cursor-pointer'
+              : 'bg-surface-2 text-faint border border-line cursor-not-allowed opacity-80'
+          }`}
+        >
+          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${bossUnlocked ? 'bg-white/20' : 'bg-surface-3'}`}>
+            {bossUnlocked ? <Swords size={30} /> : <Lock size={26} />}
+          </div>
+          <div className="flex-1">
+            <div className="text-xl font-black flex items-center gap-2">⚡ ボス戦：天空神</div>
+            <div className={`text-sm font-medium ${bossUnlocked ? 'text-white/85' : 'text-faint'}`}>
+              {bossUnlocked ? '正解でポイントを貯めて、こうげき・かいふく・ガードを選びながら戦おう！' : `インフェルノを 解放すると 挑戦できます（${THEME_UNLOCK.inferno.label}）`}
+            </div>
+          </div>
+          {bossUnlocked && <ChevronRight size={28} className="shrink-0 opacity-80" />}
+        </motion.button>
       </div>
 
       <AnimatePresence>

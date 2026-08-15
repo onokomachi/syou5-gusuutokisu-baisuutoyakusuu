@@ -52,7 +52,7 @@ export const LogView: React.FC<Props> = ({ onBack }) => {
   const badges = computeBadges({ totalCorrect, maxStreak, moduleCounts, bestTestOmote, bestTestUra, bestTestTotal, testPerfectCounts, masteredModules });
   const earnedCount = badges.filter((b) => b.earned).length;
 
-  const moduleTitle = (id: ModuleId) => MODULES.find((m) => m.id === id)?.title ?? (id === 'mock-test' ? 'テスト' : id);
+  const moduleTitle = (id: ModuleId) => MODULES.find((m) => m.id === id)?.title ?? (id === 'mock-test' ? 'テスト' : id === 'boss-battle' ? 'ボス戦' : id);
 
   const formatDate = (ts: number) => {
     const d = new Date(ts);
