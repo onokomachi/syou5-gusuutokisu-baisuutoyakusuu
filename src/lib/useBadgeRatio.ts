@@ -15,6 +15,7 @@ export function useBadgeRatio(): number {
   const bestTestTotal = useProgressStore((s) => s.bestTestTotal);
   const testPerfectCounts = useProgressStore((s) => s.testPerfectCounts);
   const masteredModulesAll = useProgressStore((s) => s.masteredModules);
+  const debugAllBadges = useProgressStore((s) => s.debugAllBadges);
 
   const moduleCounts: Record<string, number> = {};
   MODULES.forEach((m) => (moduleCounts[m.id] = moduleCountsAll[m.id] ?? 0));
@@ -24,6 +25,6 @@ export function useBadgeRatio(): number {
   return badgeRatio({
     totalCorrect, maxStreak, moduleCounts,
     bestTestOmote, bestTestUra, bestTestTotal,
-    testPerfectCounts, masteredModules,
+    testPerfectCounts, masteredModules, debugAllBadges,
   });
 }

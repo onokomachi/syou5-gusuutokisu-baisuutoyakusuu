@@ -209,6 +209,7 @@ export const MockTestModule: React.FC<Props> = ({ onExit }) => {
           onNext={advance}
           onResult={onResult}
           nextLabel="つぎの もんだいへ"
+          scaffold="none"
         />
       </div>
     </div>
