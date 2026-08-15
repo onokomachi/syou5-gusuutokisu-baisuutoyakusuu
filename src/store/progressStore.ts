@@ -15,7 +15,8 @@ export type ModuleId =
   | 'divisors'
   | 'gcd'
   | 'error-hunter'
-  | 'mock-test';
+  | 'mock-test'
+  | 'boss-battle';
 
 /** 本番テストの各設問の結果（学習のきろくで詳細表示するため） */
 export interface TestStepResult {
@@ -60,6 +61,7 @@ export interface SkillMastery {
 /** skillId のプレフィックスから所属モジュールを判定 */
 export function skillToModuleId(skillId: string): ModuleId | null {
   if (skillId === 'mock-test' || skillId.startsWith('mock-')) return 'mock-test';
+  if (skillId.startsWith('boss-')) return 'boss-battle';
   if (skillId.startsWith('eor-')) return 'even-odd-rule';
   if (skillId.startsWith('eo-')) return 'even-odd';
   if (skillId.startsWith('mul-')) return 'multiples';

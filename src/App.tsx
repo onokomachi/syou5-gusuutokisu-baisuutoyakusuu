@@ -14,6 +14,7 @@ import { DivisorsModule } from './components/modules/DivisorsModule';
 import { GcdModule } from './components/modules/GcdModule';
 import { ErrorHunterModule } from './components/modules/ErrorHunterModule';
 import { MockTestModule } from './components/modules/MockTestModule';
+import { BossBattleModule } from './components/modules/BossBattleModule';
 import { LogView } from './components/LogView';
 import { ModuleId } from './store/progressStore';
 import { useApplySettings } from './lib/useApplySettings';
@@ -24,7 +25,7 @@ import { SakuraRain } from './components/ui/SakuraRain';
 import { InfernoRain } from './components/ui/InfernoRain';
 import { TenkuuRain } from './components/ui/TenkuuRain';
 
-type View = { kind: 'HUB' } | { kind: 'LOG' } | { kind: 'TEST' } | { kind: 'MODULE'; id: ModuleId };
+type View = { kind: 'HUB' } | { kind: 'LOG' } | { kind: 'TEST' } | { kind: 'BOSS' } | { kind: 'MODULE'; id: ModuleId };
 
 export default function App() {
   const [view, setView] = useState<View>({ kind: 'HUB' });
@@ -67,13 +68,24 @@ export default function App() {
         <AnimatePresence mode="wait">
           {view.kind === 'HUB' && (
             <motion.div key="hub" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full">
-              <Hub onSelectModule={(id) => setView({ kind: 'MODULE', id })} onOpenLog={() => setView({ kind: 'LOG' })} onStartTest={() => setView({ kind: 'TEST' })} />
+              <Hub
+                onSelectModule={(id) => setView({ kind: 'MODULE', id })}
+                onOpenLog={() => setView({ kind: 'LOG' })}
+                onStartTest={() => setView({ kind: 'TEST' })}
+                onStartBoss={() => setView({ kind: 'BOSS' })}
+              />
             </motion.div>
           )}
 
           {view.kind === 'TEST' && (
             <motion.div key="test" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="w-full h-full">
               <MockTestModule onExit={goHub} />
+            </motion.div>
+          )}
+
+          {view.kind === 'BOSS' && (
+            <motion.div key="boss" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="w-full h-full">
+              <BossBattleModule onExit={goHub} />
             </motion.div>
           )}
 
