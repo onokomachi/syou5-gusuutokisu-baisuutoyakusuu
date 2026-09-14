@@ -6,13 +6,13 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Hash, Scale, Repeat, GitMerge, Grid3x3, Boxes, Search,
-  History, Settings as SettingsIcon, Lock, ClipboardCheck, ChevronRight, Flame, Swords,
+  History, Settings as SettingsIcon, Lock, ClipboardCheck, ChevronRight, Flame, Swords, RotateCcw,
 } from 'lucide-react';
 import { MODULES, ModuleMeta } from '../constants';
 import { ModuleId, useProgressStore } from '../store/progressStore';
 import { Settings } from './Settings';
 import { GoalRing } from './ui/GoalRing';
-import { getReviewTargets } from '../lib/review';
+import { getDueReviewTargets, getReviewTargets } from '../lib/review';
 import { useBadgeRatio } from '../lib/useBadgeRatio';
 import { THEME_UNLOCK, isThemeUnlocked } from '../lib/themeUnlock';
 
@@ -81,7 +81,10 @@ export const Hub: React.FC<Props> = ({ onSelectModule, onOpenLog, onStartTest, o
   const getModuleCount = useProgressStore((s) => s.getModuleCount);
   const mastery = useProgressStore((s) => s.mastery);
   const currentStreak = useProgressStore((s) => s.currentStreak);
+  const review = useProgressStore((s) => s.review);
   const reviewTargets = getReviewTargets(mastery);
+  // 「もう少し れんしゅうしよう」に出しているスキルは、ここでは重複させない
+  const dueTargets = getDueReviewTargets(review, mastery, new Set(reviewTargets.map((t) => t.skillId)));
   const badgeRatioValue = useBadgeRatio();
   const bossUnlocked = isThemeUnlocked('inferno', badgeRatioValue);
 
@@ -147,6 +150,29 @@ export const Hub: React.FC<Props> = ({ onSelectModule, onOpenLog, onStartTest, o
           </div>
           <ChevronRight size={28} className="shrink-0 opacity-80" />
         </motion.button>
+
+        {/* きょうの ふくしゅう（間隔反復: できていたことを、わすれないうちに もういちど） */}
+        {dueTargets.length > 0 && (
+          <div data-testid="due-review" className="mb-6 p-5 rounded-[24px] bg-emerald-50 border border-emerald-200">
+            <p className="text-sm font-black text-emerald-700 mb-1 flex items-center gap-1.5">
+              <RotateCcw size={16} /> きょうの ふくしゅう
+            </p>
+            <p className="text-xs text-emerald-700/80 font-medium mb-3">
+              まえに できた ところを、わすれないうちに もういちど
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {dueTargets.map((t) => (
+                <button
+                  key={t.skillId}
+                  onClick={() => onSelectModule(t.moduleId)}
+                  className="px-4 py-2 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-800 font-black text-sm hover:bg-emerald-200 transition-all active:scale-95"
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ふくしゅうコーナー */}
         {reviewTargets.length > 0 && (

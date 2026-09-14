@@ -6,6 +6,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { getProgressStorage } from '../services/progressRepository';
+import { inferInitialState, scheduleAfterResult, type ReviewState } from 'learning-app-kit/review';
 
 export type ModuleId =
   | 'even-odd'
@@ -75,6 +76,12 @@ export function skillToModuleId(skillId: string): ModuleId | null {
 interface ProgressState {
   logs: ResultRecord[];
   mastery: Record<string, SkillMastery>;
+  /**
+   * 間隔反復のスケジュール（learning-app-kit/review）。skillId → { box, lastTs, nextDueTs }。
+   * 正解するたびに次の復習までの間隔が 1→3→7→14→30 日と伸び、ミスで最初に戻る。
+   * ホームの「きょうの ふくしゅう」がここを見る。
+   */
+  review: Record<string, ReviewState>;
   currentStreak: number;
   maxStreak: number;
   dailyGoal: number;
@@ -107,6 +114,7 @@ export const useProgressStore = create<ProgressState>()(
     (set, get) => ({
       logs: [],
       mastery: {},
+      review: {},
       currentStreak: 0,
       maxStreak: 0,
       dailyGoal: 10,
@@ -145,6 +153,12 @@ export const useProgressStore = create<ProgressState>()(
             ? { ...state.masteredModules, [rec.moduleId]: true }
             : state.masteredModules;
 
+          // 間隔反復のスケジュール更新。本番テスト・ボス戦は「復習で戻る先」にならないので対象外
+          const review =
+            rec.moduleId === 'mock-test' || rec.moduleId === 'boss-battle'
+              ? state.review
+              : { ...state.review, [rec.skillId]: scheduleAfterResult(state.review[rec.skillId], rec.correct) };
+
           const currentStreak = rec.correct ? state.currentStreak + 1 : 0;
           const maxStreak = Math.max(state.maxStreak, currentStreak);
 
@@ -176,7 +190,7 @@ export const useProgressStore = create<ProgressState>()(
             }
           }
 
-          return { logs, mastery, currentStreak, maxStreak, totalCorrect, moduleCounts, bestTestOmote, bestTestUra, bestTestTotal, testPerfectCounts, masteredModules };
+          return { logs, mastery, review, currentStreak, maxStreak, totalCorrect, moduleCounts, bestTestOmote, bestTestUra, bestTestTotal, testPerfectCounts, masteredModules };
         });
       },
 
@@ -211,20 +225,32 @@ export const useProgressStore = create<ProgressState>()(
       setDebugAllBadges: (v) => set({ debugAllBadges: v }),
 
       reset: () => set({
-        logs: [], mastery: {}, currentStreak: 0, maxStreak: 0, totalCorrect: 0, moduleCounts: {},
+        logs: [], mastery: {}, review: {}, currentStreak: 0, maxStreak: 0, totalCorrect: 0, moduleCounts: {},
         bestTestOmote: 0, bestTestUra: 0, bestTestTotal: 0, testPerfectCounts: { omote: 0, ura: 0, total: 0 }, masteredModules: {},
         debugAllBadges: false,
       }),
     }),
     {
       name: 'suusei_progress_v1',
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => getProgressStorage()),
       // v1→v2: 満点回数カウンタを新設。旧データには存在しないため 0 で補う
-      migrate: (persisted) => {
+      migrate: (persisted, version) => {
         const state = persisted as Partial<ProgressState> | undefined;
         if (state && !state.testPerfectCounts) {
           state.testPerfectCounts = { omote: 0, ura: 0, total: 0 };
+        }
+        if (state && version < 3 && !state.review) {
+          const review: Record<string, ReviewState> = {};
+          const logs = state.logs ?? [];
+          for (const [skillId, m] of Object.entries(state.mastery ?? {})) {
+            const mod = skillToModuleId(skillId);
+            if (mod === 'mock-test' || mod === 'boss-battle') continue;
+            // logs は新しい順なので、最初に見つかったものが直近
+            const lastTs = logs.find((l) => l.skillId === skillId)?.ts ?? 0;
+            review[skillId] = inferInitialState(m, lastTs);
+          }
+          state.review = review;
         }
         return state as ProgressState;
       },
