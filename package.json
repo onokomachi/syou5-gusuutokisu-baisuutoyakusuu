@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
+    "check": "npm run lint && npm run build && npm run check:problems",
     "check:problems": "tsx scripts/check-problems.ts"
   },
   "dependencies": {
@@ -19,6 +20,7 @@
     "canvas-confetti": "^1.9.4",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
+    "learning-app-kit": "https://github.com/onokomachi/learning-app-kit/archive/acac3d2608976f854d0706404d6b9222dc16e50b.tar.gz",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
     "react": "^19.0.1",
