@@ -101,7 +101,7 @@ export const GenericRound: React.FC<{
   const finish = () => {
     playClear();
     confetti({ particleCount: 110, spread: 65, origin: { y: 0.6 } });
-    recordResult({ moduleId, skillId: level, label: problem.label, correct: mistakes === 0 });
+    recordResult({ moduleId, skillId: level, label: problem.label, mistakes: mistakes, correct: mistakes === 0 });
     onResult?.(mistakes === 0);
     setStage('done');
   };

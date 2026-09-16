@@ -6,6 +6,7 @@
  * 誤答例の同定・修正は遅延テストで効果が大きい（Adams 2014; Durkin & Rittle-Johnson 2012）。
  */
 import React, { useState } from 'react';
+import { useRoundRecorder } from 'learning-app-kit/react';
 import { motion } from 'motion/react';
 import { ChevronLeft, Lightbulb, Search, Check, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -62,17 +63,15 @@ export const NumErrorRound: React.FC<{
   const [mistakes, setMistakes] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
   const recordResult = useProgressStore((s) => s.recordResult);
+  // できなかった問題も残す。まちがえた回数を数え、正解までたどりつかずに
+  // 離れたときも1件記録する（learning-app-kit/react）
+  const rec = useRoundRecorder({ moduleId: 'error-hunter', skillId: ex.isCorrect ? 'eh-judge' : 'eh-fix', record: recordResult });
 
   const finish = () => {
     setStage('done');
     playClear();
     confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-    recordResult({
-      moduleId: 'error-hunter',
-      skillId: ex.isCorrect ? 'eh-judge' : 'eh-fix',
-      label: ex.statement,
-      correct: mistakes === 0,
-    });
+    rec.finish(ex.statement);
     onResult?.(mistakes === 0);
   };
 
@@ -83,7 +82,7 @@ export const NumErrorRound: React.FC<{
       else setStage('fix');
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); rec.mistake();
       setHint(
         ex.isCorrect
           ? 'もう一度 よく見て。ぐ体的な数で たしかめてみよう。'
@@ -99,7 +98,7 @@ export const NumErrorRound: React.FC<{
       setStage('reason');
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); rec.mistake();
       setHint(ex.fixHint);
     }
   };
@@ -110,7 +109,7 @@ export const NumErrorRound: React.FC<{
       setStage('reason');
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); rec.mistake();
       setHint(ex.fixHint);
     }
   };
@@ -119,7 +118,7 @@ export const NumErrorRound: React.FC<{
     if (i === ex.correctReasonIndex) finish();
     else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); rec.mistake();
       setHint('うーん、ちがうみたい。もとの文と 正しい答えを くらべて、何を わすれていたか 考えよう。');
     }
   };

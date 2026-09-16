@@ -51,6 +51,14 @@ export interface ResultRecord {
   label: string; // 履歴表示用（例: "72 ÷ 3"）
   correct: boolean; // ノーミスで完答できたか
   detail?: TestDetail; // 本番テストのときだけ。各設問の問題・正答・○×
+  /** その問題で何回まちがえたか。0なら一発正解 */
+  mistakes?: number;
+  /**
+   * 正解までたどりつかずに離れたか。
+   * これを残さないと「できなかった問題」ほど記録から消える。
+   * 分析のためだけの印で、熟達度や復習の予定は動かさない。
+   */
+  abandoned?: boolean;
 }
 
 export interface SkillMastery {
@@ -135,6 +143,11 @@ export const useProgressStore = create<ProgressState>()(
             ts: Date.now(),
           };
           const logs = [entry, ...state.logs].slice(0, 200);
+
+          // とちゅうでやめた記録は、分析のために残すだけにする。
+          // 熟達度・連続記録・復習の予定は動かさない——開いて少しやってやめたことで
+          // 子どもの側が損をするのは、ミスを罰しない方針に反するため。
+          if (rec.abandoned) return { logs };
 
           const prev = state.mastery[rec.skillId] ?? { attempts: 0, corrects: 0, perfectStreak: 0 };
           const newPerfectStreak = rec.correct ? Math.min((prev.perfectStreak ?? 0) + 1, 5) : 0;
