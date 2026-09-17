@@ -30,6 +30,16 @@ export interface TestStepResult {
   points: number;
   earned: number;
   correct: boolean; // 一発正解できたか
+  /**
+   * 項目の記号。カタログと同じ文字列にする。
+   * これが無いと「どの種類の問題が学級全体で弱いか」を出せない
+   * （大問の題名は問題が変わるたびに変わりうるので、集計の軸にできない）。
+   */
+  skillId?: string;
+  /** 何回まちがえたか。2回で×にして次へ進めた問題は 2 になる */
+  misses?: number;
+  /** 「わからない」で次へ進めたか */
+  gaveUp?: boolean;
 }
 
 export interface TestDetail {

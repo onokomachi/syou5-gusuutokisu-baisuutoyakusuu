@@ -80,10 +80,12 @@ export const GenericRound: React.FC<{
   accent: Accent;
   onNext: () => void;
   onResult?: (perfect: boolean) => void;
+  /** まちがえたとき。テストモードで「2回で×」を数えるのに使う */
+  onMiss?: () => void;
   nextLabel?: string;
   /** 本番テスト・ボス戦では 'none' に固定する。未指定なら習熟度から自動で決まる。 */
   scaffold?: ScaffoldMode;
-}> = ({ level, problem: given, moduleId, generate, accent, onNext, onResult, nextLabel, scaffold }) => {
+}> = ({ level, problem: given, moduleId, generate, accent, onNext, onResult, onMiss, nextLabel, scaffold }) => {
   const [problem] = useState<Problem>(() => given ?? generate(level));
   const [stage, setStage] = useState<'answer' | 'done'>('answer');
   const [mistakes, setMistakes] = useState(0);
@@ -108,7 +110,7 @@ export const GenericRound: React.FC<{
 
   const wrong = (message?: string) => {
     playSoftTry();
-    setMistakes((m) => m + 1);
+    setMistakes((m) => m + 1); onMiss?.();
     setHint(message ?? problem.hint);
   };
 
@@ -241,7 +243,7 @@ export const GenericRound: React.FC<{
             steps={problem.steps ?? []}
             accentBorder={accent.border}
             accentButton={accent.button}
-            onDone={(perfect) => { if (!perfect) setMistakes((m) => m + 1); finish(); }}
+            onDone={(perfect) => { if (!perfect) setMistakes((m) => m + 1); onMiss?.(); finish(); }}
           />
         )}
         {stage === 'answer' && problem.kind === 'sequence' && (

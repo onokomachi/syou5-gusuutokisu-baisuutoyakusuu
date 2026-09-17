@@ -56,8 +56,10 @@ export const NumErrorRound: React.FC<{
   startStage?: 'judge' | 'fix';
   onNext: () => void;
   onResult?: (perfect: boolean) => void;
+  /** まちがえたとき。テストモードで「2回で×」を数えるのに使う */
+  onMiss?: () => void;
   nextLabel?: string;
-}> = ({ example, startStage = 'judge', onNext, onResult, nextLabel = 'つぎの もんだいへ' }) => {
+}> = ({ example, startStage = 'judge', onNext, onResult, onMiss, nextLabel = 'つぎの もんだいへ' }) => {
   const [ex] = useState<NumError>(() => example ?? generateNumError());
   const [stage, setStage] = useState<'judge' | 'fix' | 'reason' | 'done'>(startStage);
   const [mistakes, setMistakes] = useState(0);
@@ -82,7 +84,7 @@ export const NumErrorRound: React.FC<{
       else setStage('fix');
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1); rec.mistake();
+      setMistakes((m) => m + 1); rec.mistake(); onMiss?.();
       setHint(
         ex.isCorrect
           ? 'もう一度 よく見て。ぐ体的な数で たしかめてみよう。'
@@ -98,7 +100,7 @@ export const NumErrorRound: React.FC<{
       setStage('reason');
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1); rec.mistake();
+      setMistakes((m) => m + 1); rec.mistake(); onMiss?.();
       setHint(ex.fixHint);
     }
   };
@@ -109,7 +111,7 @@ export const NumErrorRound: React.FC<{
       setStage('reason');
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1); rec.mistake();
+      setMistakes((m) => m + 1); rec.mistake(); onMiss?.();
       setHint(ex.fixHint);
     }
   };
@@ -118,7 +120,7 @@ export const NumErrorRound: React.FC<{
     if (i === ex.correctReasonIndex) finish();
     else {
       playSoftTry();
-      setMistakes((m) => m + 1); rec.mistake();
+      setMistakes((m) => m + 1); rec.mistake(); onMiss?.();
       setHint('うーん、ちがうみたい。もとの文と 正しい答えを くらべて、何を わすれていたか 考えよう。');
     }
   };
