@@ -80,7 +80,8 @@ export default function App() {
 
           {view.kind === 'TEST' && (
             <motion.div key="test" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="w-full h-full">
-              <MockTestModule onExit={goHub} />
+              {/* テストのあと、まちがえた項目の練習へ直接飛べるようにする */}
+              <MockTestModule onExit={goHub} onPractice={(id) => setView({ kind: 'MODULE', id })} />
             </motion.div>
           )}
 

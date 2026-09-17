@@ -13,6 +13,7 @@ import {
   Problem,
 } from './problems';
 import { ModuleId } from '../store/progressStore';
+import { skillToModuleId } from '../store/progressStore';
 
 export type Section = '表' | '裏';
 
@@ -62,3 +63,45 @@ export const TEST_STEPS: TestStep[] = [
 export const OMOTE_MAX = TEST_STEPS.filter((s) => s.section === '表').reduce((a, s) => a + s.points, 0); // 100
 export const URA_MAX = TEST_STEPS.filter((s) => s.section === '裏').reduce((a, s) => a + s.points, 0);   // 50
 export const TOTAL_MAX = OMOTE_MAX + URA_MAX; // 150
+
+/* ---------------- テストのあとに出す「やり方の一言」 ---------------- */
+
+/**
+ * まちがえた問題に添える、やり方のひとこと。
+ * テスト中は出さない。**終わってから**まちがえた問題にだけ添える。
+ * 項目ごとに書いたものが無ければ、モジュール（記号の前半）のものを使う。
+ */
+const HOW_BY_SKILL: Record<string, string> = {
+  'eo-zero': '0は 2×0 と 書けるので、偶数だよ。',
+  'eo-expr': '偶数は 2×□、奇数は 2×□＋1 の 形に 書けるよ。',
+  'eor-add': '偶数＋偶数＝偶数、奇数＋奇数＝偶数、偶数＋奇数＝奇数。',
+  'eor-mul': 'かけ算は、1つでも 偶数が あれば 答えは 偶数だよ。',
+  'gcd-venn': '共通の部分に 入るのが 公約数。いちばん大きいものが 最大公約数。',
+  'gcd-fraction': '約分は 分母と分子の 最大公約数で わるよ。',
+  'lcm-fraction': '通分は 分母の 最小公倍数に そろえるよ。',
+  'lcm-tile': 'たてと よこの 最小公倍数が、ぴったり しきつめられる 正方形の 1辺。',
+  'div-pairs': 'かけて その数に なる 2つの組を、小さい方から さがそう。',
+};
+
+const HOW_BY_MODULE: Record<string, string> = {
+  eo: '偶数は 2でわりきれる数、奇数は わりきれない数。一の位だけを 見れば わかるよ。',
+  eor: '偶数・奇数の 組み合わせで 答えが どちらに なるかが きまるよ。',
+  mul: '倍数は その数を 1倍・2倍・3倍… した数。0は ふくめないよ。',
+  lcm: '公倍数は 両方の 倍数。いちばん小さいものが 最小公倍数。',
+  div: '約数は わりきれる数。かけて その数に なる 組で さがすと もれないよ。',
+  gcd: '公約数は 両方の 約数。いちばん大きいものが 最大公約数。',
+  eh: 'かけ算の 組で さがしたか、もれが ないかを たしかめよう。',
+  mock: '見直しは 倍数と約数の とりちがえから。どちらを 聞かれているか 読み直そう。',
+};
+
+export function howTo(skillId: string): string {
+  return HOW_BY_SKILL[skillId]
+    ?? HOW_BY_MODULE[skillId.split('-')[0] ?? '']
+    ?? 'もう一度 ゆっくり やってみよう。';
+}
+
+/** その項目を練習できるモジュール。テストのあと「れんしゅうする」で飛ぶ先。 */
+export function practiceModuleOf(skillId: string): ModuleId | null {
+  const m = skillToModuleId(skillId);
+  return m === 'mock-test' || m === 'boss-battle' ? null : m;
+}
