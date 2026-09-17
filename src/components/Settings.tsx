@@ -8,6 +8,7 @@ import { X, Sun, Flower2, Terminal, Flame, Sparkles, Cloud, Lock, Music, Music2 
 import { useSettingsStore, Theme, FontScale } from '../store/settingsStore';
 import { THEME_UNLOCK, isThemeUnlocked } from '../lib/themeUnlock';
 import { useBadgeRatio } from '../lib/useBadgeRatio';
+import { JoinSettingsRow } from 'learning-app-kit/react';
 
 interface Props {
   onClose: () => void;
@@ -42,6 +43,12 @@ export const Settings: React.FC<Props> = ({ onClose }) => {
   // （blur や暗幕で背景がにじまないようにする）。
   const neonThemes: Theme[] = ['dark', 'aurora', 'sakura', 'inferno', 'tenkuu'];
   const overlayCls = neonThemes.includes(theme) ? 'bg-black/20' : 'bg-slate-900/40 backdrop-blur-sm';
+
+/** 学級ポータルへの接続。設定していないアプリでは名乗りの画面そのものが出ない。 */
+const PORTAL = {
+  supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+  supabaseKey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+};
 
   return (
     <motion.div
@@ -149,6 +156,9 @@ export const Settings: React.FC<Props> = ({ onClose }) => {
             />
           </button>
         </div>
+
+        {/* 学級ポータル。コードを入れなくても全部つかえる（他の学級の子もいるため） */}
+        <JoinSettingsRow config={PORTAL} />
       </motion.div>
     </motion.div>
   );
