@@ -27,6 +27,7 @@ import { Problem, ScaffoldMode, scaffoldFromStreak } from '../../lib/problems';
 import { useProgressStore, ModuleId } from '../../store/progressStore';
 import { useAdaptive } from '../../lib/useAdaptive';
 import { playClear, playSoftTry } from '../../lib/sound';
+import { ScratchPadToggle } from 'learning-app-kit/react';
 
 export interface LevelDescriptor<L extends string> { id: L; label: string; desc: string; }
 
@@ -71,6 +72,9 @@ function listFeedback(given: number[], answers: number[], kind: Problem['listKin
   }
   return `${answers.length}こ中 ${hit}こ 合っているよ。あと ${missing.length}こ さがそう。`;
 }
+
+/** けいさんらんを出すモジュール。約数・公約数・倍数・公倍数は 実際にわり算・かけ算をする */
+const NEEDS_SCRATCH: ModuleId[] = ['multiples', 'lcm', 'divisors', 'gcd'];
 
 export const GenericRound: React.FC<{
   level: string;
@@ -193,6 +197,15 @@ export const GenericRound: React.FC<{
         )}
 
         {hint && <HintBox tone="wrong">{hint}</HintBox>}
+
+        {/*
+          けいさんらんは、わり算・かけ算が要るモジュールにだけ出す。
+          偶数・奇数の判定は一の位を見るだけで、筆算は要らない。
+          必要のない画面にボタンを並べると、本来の問題が下に押しやられる。
+        */}
+        {NEEDS_SCRATCH.includes(moduleId) && (
+          <ScratchPadToggle ops={['×', '÷']} decimal={false} />
+        )}
 
         {stage === 'answer' && problem.kind === 'judge' && (
           <ChoiceButtons
