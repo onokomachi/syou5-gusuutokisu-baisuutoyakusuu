@@ -20,7 +20,7 @@
     "canvas-confetti": "^1.9.4",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
-    "learning-app-kit": "https://github.com/onokomachi/learning-app-kit/archive/3d845839b01d10e9c0f2422e161682f771f506b8.tar.gz",
+    "learning-app-kit": "https://github.com/onokomachi/learning-app-kit/archive/4c241b665abf8b69089b18dc348b21cbe29e4af0.tar.gz",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
     "react": "^19.0.1",
