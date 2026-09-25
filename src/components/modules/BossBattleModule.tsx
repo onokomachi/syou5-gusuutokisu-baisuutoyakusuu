@@ -100,6 +100,8 @@ export const BossBattleModule: React.FC<Props> = ({ onExit }) => {
   const [outcome, setOutcome] = useState<'win' | 'lose' | null>(null);
 
   const resolvedRef = useRef(false);
+  /** この問題を出した時刻。はやく解けたかの判定に使う */
+  const startedAtRef = useRef(0);
   const gaugeRef = useRef(0);
   const telegraphedRef = useRef(false);
   const pendingActionRef = useRef<BossActionKind>('normal');
@@ -119,12 +121,14 @@ export const BossBattleModule: React.FC<Props> = ({ onExit }) => {
     resolvedRef.current = false;
     setTimeLeft(q.timeLimitSec);
     const start = Date.now();
+    startedAtRef.current = start;
     const id = setInterval(() => {
       const left = Math.max(0, q.timeLimitSec - (Date.now() - start) / 1000);
       setTimeLeft(left);
       if (left <= 0) {
         clearInterval(id);
-        handleTimeout();
+        // 時間切れで没収するのは GOD だけ。Normal・Hard は そのまま解き続けられる
+        if (config.timed) handleTimeout();
       }
     }, 100);
     return () => clearInterval(id);
@@ -250,8 +254,11 @@ export const BossBattleModule: React.FC<Props> = ({ onExit }) => {
     if (resolvedRef.current || !q) return;
     resolvedRef.current = true;
     playCorrect();
-    setActionPoints((p) => Math.min(MAX_POINTS, p + q.pointReward));
-    setFeedback({ kind: 'point', text: `せいかい！ ポイント +${q.pointReward}` });
+    // Normal・Hard は、持ち時間の内に解けたら +1。速さは「得」にだけ効かせる（遅くても損はしない）
+    const fast = !config.timed && (Date.now() - startedAtRef.current) / 1000 <= q.timeLimitSec;
+    const gain = q.pointReward + (fast ? 1 : 0);
+    setActionPoints((p) => Math.min(MAX_POINTS, p + gain));
+    setFeedback({ kind: 'point', text: fast ? `せいかい！ はやい！ ポイント +${gain}` : `せいかい！ ポイント +${gain}` });
     setTimeout(() => { setFeedback(null); advanceQuestion(); }, 700);
   };
 
@@ -350,7 +357,7 @@ export const BossBattleModule: React.FC<Props> = ({ onExit }) => {
 
   /* ---------------- BATTLE ---------------- */
   const timePct = q ? Math.max(0, Math.min(100, (timeLeft / q.timeLimitSec) * 100)) : 0;
-  const urgent = !questionsExhausted && timePct < 25;
+  const urgent = config.timed && !questionsExhausted && timePct < 25;
   const gaugePct = Math.round(bossGaugePct * 100);
   const gaugeUrgent = bossGaugePct >= 0.6;
 
@@ -462,6 +469,11 @@ export const BossBattleModule: React.FC<Props> = ({ onExit }) => {
 
             {!questionsExhausted && (
               <>
+                {!config.timed && (
+                  <p className="text-[10px] font-black text-white/80 mb-0.5 shrink-0 drop-shadow">
+                    {timeLeft > 0 ? '⚡ はやく とけたら ポイント +1' : 'じっくり とこう（時間切れは ないよ）'}
+                  </p>
+                )}
                 <div className="h-1.5 rounded-full bg-black/40 overflow-hidden mb-2 shrink-0">
                   <div
                     className={`h-full rounded-full transition-all duration-100 ${urgent ? 'bg-amber-400' : 'bg-emerald-400'}`}

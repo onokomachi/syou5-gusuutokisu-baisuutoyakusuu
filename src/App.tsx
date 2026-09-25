@@ -14,6 +14,7 @@ import { DivisorsModule } from './components/modules/DivisorsModule';
 import { GcdModule } from './components/modules/GcdModule';
 import { ErrorHunterModule } from './components/modules/ErrorHunterModule';
 import { MockTestModule } from './components/modules/MockTestModule';
+import { TrialModule } from './components/modules/TrialModule';
 import { BossBattleModule } from './components/modules/BossBattleModule';
 import { LogView } from './components/LogView';
 import { DebugUnlock } from './components/DebugUnlock';
@@ -26,7 +27,7 @@ import { SakuraRain } from './components/ui/SakuraRain';
 import { InfernoRain } from './components/ui/InfernoRain';
 import { TenkuuRain } from './components/ui/TenkuuRain';
 
-type View = { kind: 'HUB' } | { kind: 'LOG' } | { kind: 'TEST' } | { kind: 'BOSS' } | { kind: 'MODULE'; id: ModuleId };
+type View = { kind: 'HUB' } | { kind: 'LOG' } | { kind: 'TEST' } | { kind: 'TRIAL' } | { kind: 'BOSS' } | { kind: 'MODULE'; id: ModuleId };
 
 export default function App() {
   const [view, setView] = useState<View>({ kind: 'HUB' });
@@ -73,6 +74,7 @@ export default function App() {
                 onSelectModule={(id) => setView({ kind: 'MODULE', id })}
                 onOpenLog={() => setView({ kind: 'LOG' })}
                 onStartTest={() => setView({ kind: 'TEST' })}
+                onStartTrial={() => setView({ kind: 'TRIAL' })}
                 onStartBoss={() => setView({ kind: 'BOSS' })}
               />
             </motion.div>
@@ -82,6 +84,12 @@ export default function App() {
             <motion.div key="test" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="w-full h-full">
               {/* テストのあと、まちがえた項目の練習へ直接飛べるようにする */}
               <MockTestModule onExit={goHub} onPractice={(id) => setView({ kind: 'MODULE', id })} />
+            </motion.div>
+          )}
+          {view.kind === 'TRIAL' && (
+            <motion.div key="trial" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="w-full h-full">
+              {/* テストのあと、まちがえた項目の練習へ直接飛べるようにする */}
+              <TrialModule onExit={goHub} onPractice={(id) => setView({ kind: 'MODULE', id })} />
             </motion.div>
           )}
 

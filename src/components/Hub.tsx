@@ -15,11 +15,15 @@ import { GoalRing } from './ui/GoalRing';
 import { getDueReviewTargets, getReviewTargets } from '../lib/review';
 import { useBadgeRatio } from '../lib/useBadgeRatio';
 import { THEME_UNLOCK, isThemeUnlocked } from '../lib/themeUnlock';
+import { TrialCard } from 'learning-app-kit/react';
+import { FLOOR_COUNT } from '../lib/trialConfig';
 
 interface Props {
   onSelectModule: (id: ModuleId) => void;
   onOpenLog: () => void;
   onStartTest: () => void;
+  /** 神域の試練（ハブのいちばん下） */
+  onStartTrial: () => void;
   onStartBoss: () => void;
 }
 
@@ -76,7 +80,7 @@ const ModuleCard: React.FC<{ m: ModuleMeta; onClick: () => void; cleared: number
   );
 };
 
-export const Hub: React.FC<Props> = ({ onSelectModule, onOpenLog, onStartTest, onStartBoss }) => {
+export const Hub: React.FC<Props> = ({ onSelectModule, onOpenLog, onStartTest, onStartBoss, onStartTrial }) => {
   const [showSettings, setShowSettings] = useState(false);
   const getModuleCount = useProgressStore((s) => s.getModuleCount);
   const mastery = useProgressStore((s) => s.mastery);
@@ -226,6 +230,11 @@ export const Hub: React.FC<Props> = ({ onSelectModule, onOpenLog, onStartTest, o
           </div>
           {bossUnlocked && <ChevronRight size={28} className="shrink-0 opacity-80" />}
         </motion.button>
+
+        {/* 神域の試練（単元の中の実力チェック）。ハブのいちばん下に置く */}
+        <div className="mt-6">
+          <TrialCard appId="suusei" floors={FLOOR_COUNT} onClick={onStartTrial} />
+        </div>
       </div>
 
       <AnimatePresence>
