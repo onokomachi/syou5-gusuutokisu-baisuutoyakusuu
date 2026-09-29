@@ -20,10 +20,19 @@ import { createSyncedStorage } from 'learning-app-kit/sync';
 /** カタログ(learning-app-kit/catalog)の app_id と一致させること。 */
 const APP_ID = 'suusei';
 
+/**
+ * 環境変数を安全に読む。
+ * Vite の外（npm run verify / audit を tsx で走らせるとき）では import.meta.env 自体が無く、
+ * そのまま参照するとモジュールを読んだ瞬間に例外になる（CI の check が落ちていた）。
+ */
+function env(key: 'VITE_SUPABASE_URL' | 'VITE_SUPABASE_PUBLISHABLE_KEY'): string | undefined {
+  return (import.meta as { env?: Record<string, string | undefined> }).env?.[key];
+}
+
 const storage = createSyncedStorage({
   appId: APP_ID,
-  supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
-  supabaseKey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+  supabaseUrl: env('VITE_SUPABASE_URL'),
+  supabaseKey: env('VITE_SUPABASE_PUBLISHABLE_KEY'),
 });
 
 /** 現在の保存先を返す。差し替えポイントはこの関数のみ。 */
