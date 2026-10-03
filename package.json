@@ -9,8 +9,9 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "check": "npm run lint && npm run build && npm run check:problems",
-    "check:problems": "tsx scripts/check-problems.ts"
+    "check": "npm run platform && npm run lint && npm run build && npm run check:problems",
+    "check:problems": "tsx scripts/check-problems.ts",
+    "platform": "learning-app-kit-platform check"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
@@ -20,7 +21,7 @@
     "canvas-confetti": "^1.9.4",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
-    "learning-app-kit": "https://github.com/onokomachi/learning-app-kit/archive/d4718f886fac5caf5e9776dab1781dffa34d8bad.tar.gz",
+    "learning-app-kit": "https://github.com/onokomachi/learning-app-kit/archive/99a75864184a0467cc43f8346b9a7b5619d9315a.tar.gz",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
     "react": "^19.0.1",
@@ -36,5 +37,8 @@
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.3"
+  },
+  "learningApp": {
+    "family": "math"
   }
 }
