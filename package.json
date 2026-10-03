@@ -11,7 +11,8 @@
     "lint": "tsc --noEmit",
     "check": "npm run platform && npm run lint && npm run build && npm run check:problems",
     "check:problems": "tsx scripts/check-problems.ts",
-    "platform": "learning-app-kit-platform check"
+    "platform": "learning-app-kit-platform check",
+    "prebuild": "npm run platform"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
@@ -21,7 +22,7 @@
     "canvas-confetti": "^1.9.4",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
-    "learning-app-kit": "https://github.com/onokomachi/learning-app-kit/archive/99a75864184a0467cc43f8346b9a7b5619d9315a.tar.gz",
+    "learning-app-kit": "https://github.com/onokomachi/learning-app-kit/archive/be40ba43a9c10fcfdc7cbfe75ba98dbbb8f2877a.tar.gz",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
     "react": "^19.0.1",
