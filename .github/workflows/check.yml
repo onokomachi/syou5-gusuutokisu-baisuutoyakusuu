@@ -4,9 +4,10 @@
 # - push / PR のたびに `npm run check` を実行する（型チェック・ビルド・問題の検証・学級ポータルのルール点検）。
 #   人間（やClaude）が実行を忘れても、問題データの不正・共通ファイルのずれを機械的に止める。
 # - 毎週月曜の朝（日本時間 7:00）に kit の最新と見くらべ、遅れていれば kit を上げて `npm run check` を通し、
-#   通れば更新の PR を自動で作る（持ち主は PR をマージするだけ。Claude のトークンは使わない）。
-#   通らなければ失敗し、GitHub からリポジトリの持ち主にメールが届く（全体セッションで直す）。
-#   トークンの登録は要らない（kit は公開リポジトリ。PR は Actions に最初からある GITHUB_TOKEN で作る）。
+#   通れば main に直接反映する（Vercel が自動で本番に出す。持ち主の操作は要らない）。
+#   通らなければ反映せずに失敗し、GitHub からリポジトリの持ち主にメールが届く（全体セッションで直す）。
+#   CI の設定ファイル自体が変わる更新だけは、GitHub の決まりで自動では書きこめないので、反映せずにメールで知らせる。
+#   トークンの登録も、リポジトリの設定変更も要らない（kit は公開リポジトリ。反映は Actions に最初からある GITHUB_TOKEN で行う）。
 
 name: check
 
@@ -42,7 +43,6 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: write
-      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -55,32 +55,23 @@ jobs:
         run: npx learning-app-kit-platform update
         env:
           GITHUB_TOKEN: ${{ github.token }}
-      - name: 上げた kit で点検する
+      - name: CI の設定が変わる更新は、自動では反映できない
+        if: steps.kit.outputs.updated == 'true'
+        run: |
+          if ! git diff --quiet -- .github/workflows; then
+            echo "::error::この更新は CI の設定ファイル（.github/workflows）も変えます。GitHub の決まりで Actions からは書きこめません。全体セッションで Claude に「kit を最新に上げて」と頼んでください。"
+            exit 1
+          fi
+      - name: 上げた kit で点検する（通らなければ反映しない）
         if: steps.kit.outputs.updated == 'true'
         run: npm run check
-      - name: 更新の PR を作る
+      - name: main に反映する
         if: steps.kit.outputs.updated == 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
           SHA: ${{ steps.kit.outputs.sha }}
         run: |
-          branch="kit-update/${SHA:0:7}"
-          if git ls-remote --exit-code --heads origin "$branch" >/dev/null; then
-            echo "この版の更新はすでに作ってあります（$branch）"; exit 0
-          fi
-          # 古い版の更新 PR は閉じる（新しい版にまとめる）
-          gh pr list --state open --json number,headRefName \
-            --jq '.[] | select(.headRefName | startswith("kit-update/")) | .number' \
-            | xargs -r -n1 gh pr close --delete-branch
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git switch -c "$branch"
           git add -A
-          git commit -m "kit を最新（${SHA:0:7}）に上げる（週1回の自動更新）"
-          git push origin "$branch"
-          gh pr create --base main --head "$branch" \
-            --title "kit を最新（${SHA:0:7}）に上げる（自動）" \
-            --body "週1回の自動更新です。kit を最新に上げ、共通ファイル・CLAUDE.md の共通ルールをそろえ、\`npm run check\` が通ることを確かめました。マージすれば本番に入ります。
-
-          ほかのアプリ・PRISM・データベースへの影響: なし（kit の版をそろえるだけ）" \
-          || { echo "::error::PR を作れませんでした。リポジトリの Settings → Actions → General → 「Allow GitHub Actions to create and approve pull requests」をオンにしてください。ブランチ $branch は作ってあるので、GitHub の画面から PR にできます。"; exit 1; }
+          git commit -m "kit を最新（${SHA:0:7}）に上げる（週1回の自動更新。npm run check 通過済み）"
+          git push origin HEAD:main || { echo "::error::main に反映できませんでした（main が先に動いた／ブランチ保護がある）。全体セッションで Claude に「kit を最新に上げて」と頼んでください。"; exit 1; }
