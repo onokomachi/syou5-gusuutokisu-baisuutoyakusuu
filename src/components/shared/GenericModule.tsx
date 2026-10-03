@@ -294,7 +294,7 @@ export function createLevelModule<L extends string>(config: {
     const [round, setRound] = useState(0);
     const getMasteryStreak = useProgressStore((s) => s.getMasteryStreak);
     const getTodaySkillCount = useProgressStore((s) => s.getTodaySkillCount);
-    const adaptive = useAdaptive<L>(levelIds, moduleId);
+    const adaptive = useAdaptive<L>(levelIds);
 
     if (mode === 'setup') {
       return (
