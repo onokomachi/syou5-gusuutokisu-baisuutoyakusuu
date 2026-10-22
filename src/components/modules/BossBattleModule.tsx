@@ -80,6 +80,8 @@ export const BossBattleModule: React.FC<Props> = ({ onExit }) => {
   const ratio = useBadgeRatio();
   const unlocked = isThemeUnlocked('inferno', ratio);
   const mastery = useProgressStore((s) => s.mastery);
+  /** HELL は GOD に1回でも勝った子だけ（勝ちは skillId "boss-god" で記録している） */
+  const godCleared = (mastery['boss-god']?.corrects ?? 0) > 0;
   const recordResult = useProgressStore((s) => s.recordResult);
 
   const [phase, setPhase] = useState<Phase>('INTRO');
@@ -257,7 +259,7 @@ export const BossBattleModule: React.FC<Props> = ({ onExit }) => {
     // Normal・Hard は、持ち時間の内に解けたら +1。速さは「得」にだけ効かせる（遅くても損はしない）
     const fast = !config.timed && (Date.now() - startedAtRef.current) / 1000 <= q.timeLimitSec;
     const gain = q.pointReward + (fast ? 1 : 0);
-    setActionPoints((p) => Math.min(MAX_POINTS, p + gain));
+    setActionPoints((p) => Math.min(config.maxPoints ?? MAX_POINTS, p + gain));
     setFeedback({ kind: 'point', text: fast ? `せいかい！ はやい！ ポイント +${gain}` : `せいかい！ ポイント +${gain}` });
     setTimeout(() => { setFeedback(null); advanceQuestion(); }, 700);
   };
@@ -266,7 +268,8 @@ export const BossBattleModule: React.FC<Props> = ({ onExit }) => {
     if (resolvedRef.current || !q) return;
     resolvedRef.current = true;
     playSoftTry();
-    setFeedback({ kind: 'nopoint', text: 'ポイント ならず…' });
+    setFeedback({ kind: 'nopoint', text: config.wrongCostsPoint ? '時間切れ… ポイント -1' : 'ポイント ならず…' });
+    if (config.wrongCostsPoint) setActionPoints((p) => Math.max(0, p - 1));
     setTimeout(() => { setFeedback(null); advanceQuestion(); }, 700);
   };
 
@@ -299,21 +302,22 @@ export const BossBattleModule: React.FC<Props> = ({ onExit }) => {
 
           {unlocked && (
             <div className="space-y-4">
-              {(['normal', 'hard', 'god'] as BossTier[]).map((t) => {
+              {(['normal', 'hard', 'god', 'hell'] as BossTier[]).map((t) => {
                 const c = BOSS_TIERS[t];
-                const tone = t === 'normal' ? 'from-emerald-500 to-teal-500' : t === 'hard' ? 'from-amber-500 to-orange-500' : 'from-indigo-600 to-violet-700';
+                const tone = t === 'normal' ? 'from-emerald-500 to-teal-500' : t === 'hard' ? 'from-amber-500 to-orange-500' : t === 'hell' ? 'from-zinc-950 to-red-950' : 'from-indigo-600 to-violet-700';
                 return (
                   <button
                     key={t}
                     onClick={() => startBattle(t)}
-                    className={`w-full p-5 rounded-[24px] bg-gradient-to-r ${tone} text-white shadow-lg hover:shadow-xl text-left transition-all active:scale-[0.99] flex items-center gap-4`}
+                    disabled={t === 'hell' && !godCleared}
+                    className={`disabled:opacity-40 disabled:cursor-not-allowed w-full p-5 rounded-[24px] bg-gradient-to-r ${tone} text-white shadow-lg hover:shadow-xl text-left transition-all active:scale-[0.99] flex items-center gap-4`}
                   >
                     <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
                       <Swords size={28} />
                     </div>
                     <div className="flex-1">
                       <div className="text-xl font-black">{c.label}</div>
-                      <div className="text-sm text-white/85 font-medium">{c.subtitle}</div>
+                      <div className="text-sm text-white/85 font-medium">{t === 'hell' && !godCleared ? 'GOD に 勝つと ひらく（苦手な問題が つづき、時間も ポイントも きびしい）' : c.subtitle}</div>
                       <div className="text-xs text-white/70 font-bold mt-1">さいだい{c.questionCount}問・表と裏を まぜて出題</div>
                     </div>
                   </button>
