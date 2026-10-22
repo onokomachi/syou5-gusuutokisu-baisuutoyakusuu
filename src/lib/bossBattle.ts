@@ -14,7 +14,7 @@
 import { TEST_STEPS, TestStep } from './testConfig';
 import { Problem } from './problems';
 
-export type BossTier = 'normal' | 'hard' | 'god';
+export type BossTier = 'normal' | 'hard' | 'god' | 'hell';
 
 export interface TierConfig {
   id: BossTier;
@@ -42,29 +42,47 @@ export interface TierConfig {
   attackDamageToBoss: number;
   /** プレイヤーが「かいふく」を選んだときに 回復するHP量 */
   healAmount: number;
+  /** HELL: いちばん苦手な問題（正答率の低い 3分の1）だけから、つづけて出す */
+  weakFocus?: boolean;
+  /** ためておけるポイントの上限（ふつうは 5） */
+  maxPoints?: number;
+  /** まちがえた・時間切れのとき ポイントを1へらす */
+  wrongCostsPoint?: boolean;
+  /** 大きい問題でも ポイントは1（ふつうは 2） */
+  flatPoints?: boolean;
+  /** 筆算が要る問題に足す秒数（ふつうは WRITTEN_CALC_EXTRA_SEC） */
+  writtenCalcExtraSec?: number;
 }
 
 export const BOSS_TIERS: Record<BossTier, TierConfig> = {
   normal: {
     id: 'normal', label: 'Normal', subtitle: 'ゆっくり戦えるれんしゅう戦（時間切れなし・はやいと ボーナス）',
     questionCount: 15, timeMultiplier: 1.4, timed: false, hp: 100,
-    actionCycleSec: 45, chargeChance: 0.15,
-    attackDamageToPlayer: { normal: 12, charge: 26 },
-    attackDamageToBoss: 15, healAmount: 20,
+    actionCycleSec: 34, chargeChance: 0.2,
+    attackDamageToPlayer: { normal: 15, charge: 32 },
+    attackDamageToBoss: 12, healAmount: 18,
   },
   hard: {
     id: 'hard', label: 'Hard', subtitle: '本番テストと同じくらいのペース（時間切れなし・はやいと ボーナス）',
     questionCount: 25, timeMultiplier: 1.0, timed: false, hp: 100,
-    actionCycleSec: 30, chargeChance: 0.25,
-    attackDamageToPlayer: { normal: 16, charge: 34 },
-    attackDamageToBoss: 11, healAmount: 16,
+    actionCycleSec: 25, chargeChance: 0.3,
+    attackDamageToPlayer: { normal: 18, charge: 38 },
+    attackDamageToBoss: 10, healAmount: 14,
   },
   god: {
     id: 'god', label: 'GOD', subtitle: '本番テストより速い、真の実力者むけ（時間切れあり）',
-    questionCount: 19, timeMultiplier: 0.7, timed: true, hp: 100,
-    actionCycleSec: 20, chargeChance: 0.35,
-    attackDamageToPlayer: { normal: 20, charge: 44 },
-    attackDamageToBoss: 9, healAmount: 12,
+    questionCount: 19, timeMultiplier: 0.65, timed: true, hp: 100,
+    actionCycleSec: 18, chargeChance: 0.4,
+    attackDamageToPlayer: { normal: 22, charge: 46 },
+    attackDamageToBoss: 8, healAmount: 10,
+  },
+  hell: {
+    id: 'hell', label: 'HELL', subtitle: 'GOD に勝った子だけ。苦手な問題が つづき、時間も ポイントも きびしい（時間切れあり）',
+    questionCount: 26, timeMultiplier: 0.6, timed: true, hp: 100,
+    actionCycleSec: 17, chargeChance: 0.45,
+    attackDamageToPlayer: { normal: 22, charge: 46 },
+    attackDamageToBoss: 10, healAmount: 10,
+    weakFocus: true, maxPoints: 3, wrongCostsPoint: true, flatPoints: true, writtenCalcExtraSec: 12,
   },
 };
 
@@ -76,6 +94,12 @@ export function weightForSkill(skillId: string, mastery: Record<string, SkillSta
   if (!m || m.attempts === 0) return 1;
   const accuracy = m.corrects / m.attempts;
   return 1 + (1 - accuracy) * 3;
+}
+
+/** 重いもの（苦手なもの）から順に 3分の1（少なくとも4つ）。同じ重さは ばらばらに並べる */
+function weakestOf<T>(items: { item: T; weight: number }[]): { item: T; weight: number }[] {
+  const keep = Math.min(items.length, Math.max(4, Math.ceil(items.length / 3)));
+  return items.map((x) => ({ x, r: Math.random() })).sort((a, b) => b.x.weight - a.x.weight || a.r - b.r).slice(0, keep).map((y) => y.x);
 }
 
 /** 重みに比例した確率で1件だけ選ぶ（重い項目ほど選ばれやすい）。 */
@@ -131,15 +155,17 @@ export function pickBossQuestions(tier: BossTier, mastery: Record<string, SkillS
   const config = BOSS_TIERS[tier];
   const pool = TEST_STEPS;
   const weighted = pool.map((s) => ({ item: s, weight: weightForSkill(s.level, mastery) }));
+  // HELL は、いちばん苦手な問題（重い順の 3分の1・少なくとも4つ）だけから出す。苦手が つづけて出る
+  const pickFrom = config.weakFocus ? weakestOf(weighted) : weighted;
 
   // 重みに比例した確率で毎回1問ずつ選ぶ（苦手なスキルほど出やすい）。
   // 同じスキルが連続しがちなときは1回だけ引き直して、極端な連続出題をやわらげる。
   const order: TestStep[] = [];
   let lastLevel: string | null = null;
   for (let i = 0; i < config.questionCount; i++) {
-    let picked = weightedPick(weighted);
+    let picked = weightedPick(pickFrom);
     if (picked.level === lastLevel && pool.length > 1) {
-      picked = weightedPick(weighted);
+      picked = weightedPick(pickFrom);
     }
     order.push(picked);
     lastLevel = picked.level;
@@ -149,8 +175,8 @@ export function pickBossQuestions(tier: BossTier, mastery: Record<string, SkillS
     const problem = step.gen();
     const isBig = step.points >= 10;
     const base = baseSeconds(problem) * (isBig ? 1.4 : 1);
-    const timeLimitSec = Math.max(8, Math.round(base * config.timeMultiplier)) + (config.timed && needsWrittenCalc(problem) ? WRITTEN_CALC_EXTRA_SEC : 0);
-    return { step, problem, isBig, timeLimitSec, pointReward: isBig ? 2 : 1 };
+    const timeLimitSec = Math.max(8, Math.round(base * config.timeMultiplier)) + (config.timed && needsWrittenCalc(problem) ? (config.writtenCalcExtraSec ?? WRITTEN_CALC_EXTRA_SEC) : 0);
+    return { step, problem, isBig, timeLimitSec, pointReward: isBig && !config.flatPoints ? 2 : 1 };
   });
 }
 
