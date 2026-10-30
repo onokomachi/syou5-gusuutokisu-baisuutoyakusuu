@@ -256,7 +256,8 @@ export const GenericRound: React.FC<{
             steps={problem.steps ?? []}
             accentBorder={accent.border}
             accentButton={accent.button}
-            onDone={(perfect) => { if (!perfect) setMistakes((m) => m + 1); onMiss?.(); finish(); }}
+            onMiss={onMiss}
+            onDone={(perfect) => { if (!perfect) setMistakes((m) => m + 1); finish(); }}
           />
         )}
         {stage === 'answer' && problem.kind === 'sequence' && (
