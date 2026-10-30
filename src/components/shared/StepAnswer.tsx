@@ -21,9 +21,11 @@ interface Props {
   accentButton?: string;
   /** 1段ごとの誤答も含めた「ノーミスだったか」を返して完了 */
   onDone: (perfect: boolean) => void;
+  /** 1段まちがえるたびに呼ぶ（テスト・ボス戦で、まちがいを すぐ数えるため） */
+  onMiss?: () => void;
 }
 
-export const StepAnswer: React.FC<Props> = ({ steps, accentBorder = 'hover:border-blue-400', accentButton = 'bg-blue-500 hover:bg-blue-600', onDone }) => {
+export const StepAnswer: React.FC<Props> = ({ steps, accentBorder = 'hover:border-blue-400', accentButton = 'bg-blue-500 hover:bg-blue-600', onDone, onMiss }) => {
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<'answer' | 'reveal'>('answer');
   const [mistakes, setMistakes] = useState(0);
@@ -43,6 +45,7 @@ export const StepAnswer: React.FC<Props> = ({ steps, accentBorder = 'hover:borde
   const wrong = () => {
     playSoftTry();
     setMistakes((m) => m + 1);
+    onMiss?.();
     setHint(step.hint);
   };
 

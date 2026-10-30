@@ -52,7 +52,15 @@ export interface TierConfig {
   flatPoints?: boolean;
   /** 筆算が要る問題に足す秒数（ふつうは WRITTEN_CALC_EXTRA_SEC） */
   writtenCalcExtraSec?: number;
+  /** HELL: まちがえた・時間切れのとき、自分が受けるダメージ（ガードでは ふせげない） */
+  missDamage?: number;
 }
+
+/*
+ * まちがえたら、その問題は そこで おしまい（ポイントなし・つぎの問題へ。2026-10-30 先生と決めた）。
+ * 練習の画面をそのまま使っているので、まちがえると ヒント（答えが分かる）が出て、選ぶ問題は ぜんぶ押せば
+ * 正解にたどりつけてしまっていた。ボス戦は 力だめし なので、1回目の まちがいで 問題を かくして 次へ進む。
+ */
 
 export const BOSS_TIERS: Record<BossTier, TierConfig> = {
   normal: {
@@ -83,6 +91,7 @@ export const BOSS_TIERS: Record<BossTier, TierConfig> = {
     attackDamageToPlayer: { normal: 22, charge: 46 },
     attackDamageToBoss: 10, healAmount: 10,
     weakFocus: true, maxPoints: 3, wrongCostsPoint: true, flatPoints: true, writtenCalcExtraSec: 12,
+    missDamage: 5,
   },
 };
 

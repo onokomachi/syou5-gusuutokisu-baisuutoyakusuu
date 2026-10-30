@@ -102,6 +102,8 @@ export const BossBattleModule: React.FC<Props> = ({ onExit }) => {
   const [outcome, setOutcome] = useState<'win' | 'lose' | null>(null);
 
   const resolvedRef = useRef(false);
+  /** まちがえた・時間切れの問題は すぐ かくす（練習の画面の ヒント＝答えが 見えないように） */
+  const [hideQuestion, setHideQuestion] = useState(false);
   /** この問題を出した時刻。はやく解けたかの判定に使う */
   const startedAtRef = useRef(0);
   const gaugeRef = useRef(0);
@@ -121,6 +123,7 @@ export const BossBattleModule: React.FC<Props> = ({ onExit }) => {
   useEffect(() => {
     if (phase !== 'BATTLE' || !q || questionsExhausted) return;
     resolvedRef.current = false;
+    setHideQuestion(false);
     setTimeLeft(q.timeLimitSec);
     const start = Date.now();
     startedAtRef.current = start;
@@ -264,14 +267,30 @@ export const BossBattleModule: React.FC<Props> = ({ onExit }) => {
     setTimeout(() => { setFeedback(null); advanceQuestion(); }, 700);
   };
 
-  const handleTimeout = () => {
+  /**
+   * まちがえた・時間切れ：その問題は おしまい（ポイントなし・つぎの問題へ）。問題は すぐ かくす。
+   * HELL は ポイント -1 と、自分に missDamage（5）。ガードでは ふせげない。
+   */
+  const handleMiss = (why: 'miss' | 'timeout') => {
     if (resolvedRef.current || !q) return;
     resolvedRef.current = true;
+    setHideQuestion(true);
     playSoftTry();
-    setFeedback({ kind: 'nopoint', text: config.wrongCostsPoint ? '時間切れ… ポイント -1' : 'ポイント ならず…' });
+    const head = why === 'timeout' ? '時間切れ…' : 'まちがい…';
     if (config.wrongCostsPoint) setActionPoints((p) => Math.max(0, p - 1));
-    setTimeout(() => { setFeedback(null); advanceQuestion(); }, 700);
+    const dmg = config.missDamage ?? 0;
+    if (dmg > 0) {
+      const nextHp = Math.max(0, liveRef.current.playerHp - dmg);
+      setPlayerHp(nextHp);
+      liveRef.current.playerHp = nextHp;
+      setFeedback({ kind: 'player-dmg', text: `${head} -${dmg}${config.wrongCostsPoint ? '・ポイント -1' : ''}` });
+      setTimeout(() => { setFeedback(null); if (nextHp <= 0) finishBattle(false); else advanceQuestion(); }, 900);
+      return;
+    }
+    setFeedback({ kind: 'nopoint', text: `${head} ${config.wrongCostsPoint ? 'ポイント -1' : 'ポイント ならず'}` });
+    setTimeout(() => { setFeedback(null); advanceQuestion(); }, 900);
   };
+  const handleTimeout = () => handleMiss('timeout');
 
   /* ---------------- INTRO（ティア選択・未解放ならロック） ---------------- */
   if (phase === 'INTRO') {
@@ -487,7 +506,7 @@ export const BossBattleModule: React.FC<Props> = ({ onExit }) => {
                 {/* 残り高さいっぱいまで使い、横スクロールも許可して マスの取りこぼしタップを防ぐ */}
                 <div className="bg-surface/95 backdrop-blur-md rounded-[26px] shadow-2xl border border-line overflow-y-auto overflow-x-auto flex-1 min-h-0">
                   <div key={resolveKey}>
-                    {q && (
+                    {q && !hideQuestion && (
                       <GenericRound
                         level={q.step.level}
                         problem={q.problem}
@@ -495,7 +514,7 @@ export const BossBattleModule: React.FC<Props> = ({ onExit }) => {
                         generate={() => q.problem}
                         accent={{ border: 'hover:border-cyan-400', bg: 'bg-cyan-500 border-cyan-500', button: 'bg-cyan-500 hover:bg-cyan-600' }}
                         onNext={() => {}}
-                        onResult={() => handleCorrect()}
+                        onResult={() => handleCorrect()} onMiss={() => handleMiss('miss')}
                         nextLabel="つぎへ"
                         scaffold="none"
                       />
