@@ -23,14 +23,15 @@ import {
 } from '../../lib/bossBattle';
 import { playCorrect, playClear, playSoftTry } from '../../lib/sound';
 import { GenericRound } from '../shared/GenericModule';
+import { media } from '../../lib/media';
 
 interface Props { onExit: () => void; }
 
 const BOSS_NAME = '天空神';
 const VIDEO = {
-  idle: '/videos/boss/idle.mp4',
-  normal: '/videos/boss/attack-normal.mp4',
-  special: '/videos/boss/attack-special.mp4',
+  idle: media('/videos/boss-common/idle.mp4'),
+  normal: media('/videos/boss-common/attack-normal.mp4'),
+  special: media('/videos/boss-common/attack-special.mp4'),
 };
 
 type Phase = 'INTRO' | 'BATTLE' | 'RESULT';
